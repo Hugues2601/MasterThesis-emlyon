@@ -10,7 +10,7 @@ def MC_heston_forward_start():
     r = 0.05  # Risk-free rate
     T1 = 1  # Forward start date
     T2 = 2  # Maturity
-    K_ratio = 1.2  # Strike as a ratio of S(T1)
+    K_ratio = 1  # Strike as a ratio of S(T1)
     n = 252  # Number of time steps
     dt = T2 / n
     M = 10000  # Number of simulations
@@ -67,3 +67,5 @@ def MC_heston_forward_start():
 
 # Call the function
 MC_heston_forward_start()
+
+

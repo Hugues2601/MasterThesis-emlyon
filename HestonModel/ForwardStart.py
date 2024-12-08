@@ -57,16 +57,75 @@ S0 = torch.tensor(100, dtype=torch.float64, requires_grad=True)
 
 hestonParams = (kappa, theta, sigma, rho, v0)
 
-k    = torch.tensor(0.7, dtype=torch.float64)
-t    = torch.tensor(1, dtype=torch.float64)
-tau  = torch.tensor(1.0, dtype=torch.float64, requires_grad=True)
+k    = torch.tensor(1, dtype=torch.float64)
+t    = torch.tensor(1, dtype=torch.float64, requires_grad=True)
+tau  = torch.tensor(2, dtype=torch.float64, requires_grad=True)
 precision = 20.0
 
 price = heston_price(S0, k, t, tau, hestonParams, precision=precision)
 
-price.backward()
+K_list = torch.linspace(0.05, 2, 100, dtype=torch.float64)  # par exemple 20 points entre 0.05 et 1.5
 
-print("dPrice/dS0:", S0.grad.item())
-print("dPrice/dsigma:", sigma.grad.item())
-print("dPrice/dtau:", tau.grad.item())
-print("Le prix de l'option call forward selon le modèle de Heston est:", price.item())
+deltas = []
+vegas = []
+thetas = []
+
+
+for K_ in K_list:
+    # On crée un nouveau S0 avec gradient activé
+    S0_ = torch.tensor(100, dtype=torch.float64, requires_grad=True)
+
+    # Calcul du prix
+    price = heston_price(S0_, K_, t, tau, hestonParams, precision=precision)
+
+    # On remet à zéro les gradients si nécessaire (pas obligé si S0_ est créé chaque fois)
+    if S0_.grad is not None:
+        S0_.grad.zero_()
+    if sigma.grad is not None:
+        sigma.grad.zero_()
+    if t.grad is not None:
+        tau.grad.zero_()
+
+    # Backprop pour calculer dPrice/dS0
+    price.backward()
+
+    # Récupération du delta
+    delta = S0_.grad.item()
+    vega = sigma.grad.item()  # dPrice/dsigma
+    theta_ = t.grad.item()  # dPrice/dtau
+
+    deltas.append(delta)
+    vegas.append(vega)
+    thetas.append(theta_)
+
+import matplotlib.pyplot as plt
+
+# Plot du Delta
+plt.figure(figsize=(10,6))
+plt.plot(K_list, deltas, 'o', label="Delta")
+plt.xlabel("Strike (K)")
+plt.ylabel("Delta")
+plt.title("Delta en fonction du Strike")
+plt.grid(True)
+plt.legend()
+plt.show()
+
+# Plot du Vega
+plt.figure(figsize=(10,6))
+plt.plot(K_list, vegas, 'o', color='red', label="Vega")
+plt.xlabel("Strike (K)")
+plt.ylabel("Vega")
+plt.title("Vega en fonction du Strike")
+plt.grid(True)
+plt.legend()
+plt.show()
+
+# Plot du Theta
+plt.figure(figsize=(10,6))
+plt.plot(K_list, thetas, 'o', color='green', label="Theta")
+plt.xlabel("Strike (K)")
+plt.ylabel("Theta")
+plt.title("Theta en fonction du Strike")
+plt.grid(True)
+plt.legend()
+plt.show()

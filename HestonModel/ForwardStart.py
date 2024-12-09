@@ -23,10 +23,15 @@ def fs_heston_cf(phi, S0, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
     d = torch.sqrt((kappa-rho*sigma*1j*phi)**2 + sigma**2 * (phi**2 + 1j * phi))
     g = (kappa - rho*sigma*1j*phi-d)/(kappa-rho*sigma*1j*phi+d)
 
-    A_bar = kappa*theta/sigma**2 * ((kappa - rho*sigma*1j*phi-d)*tau - 2*torch.log((1-g*torch.exp(-d*tau))/(1-g)))
+    A_bar = (
+            r * 1j * phi * tau
+            + (kappa * theta * tau / (sigma ** 2)) * (kappa - sigma * rho * 1j * phi - d)
+            - (2 * kappa * theta / (sigma ** 2)) * torch.log((1.0 - g * torch.exp(-d * tau)) / (1.0 - g))
+    )
+
     C_bar = (1-torch.exp(-d*tau))/(sigma**2 * (1-g*torch.exp(-d*tau))) * (kappa-rho*sigma*1j*phi - d)
 
-    cf = torch.exp(A_bar + r*tau + (C_bar * little_c_bar*kappa_bar)/(1 - 2*C_bar*little_c_bar)) * (1/(1-2*C_bar*little_c_bar))**(delta/2)
+    cf = torch.exp(A_bar + (C_bar * little_c_bar*kappa_bar)/(1 - 2*C_bar*little_c_bar)) * (1/(1-2*C_bar*little_c_bar))**(delta/2)
     return cf
 
 
@@ -80,7 +85,7 @@ k = torch.tensor([0.7], device=CONFIG.device)
 T0 = torch.tensor([1], device=CONFIG.device)
 T1 = torch.tensor([2], device=CONFIG.device)
 T2 = torch.tensor([3], device=CONFIG.device)
-r = torch.tensor(1.00, device=CONFIG.device, requires_grad=True)
+r = torch.tensor(0.0, device=CONFIG.device, requires_grad=True)
 kappa = torch.tensor(2.1, device=CONFIG.device)
 v0 = torch.tensor(0.05, device=CONFIG.device)
 theta = torch.tensor(0.03, device=CONFIG.device)
@@ -90,7 +95,5 @@ rho = torch.tensor(-0.2, device=CONFIG.device)
 
 
 price = fs_heston_price(S0, k, T0, T1, T2, r, kappa, v0, theta, sigma, rho)
-price.backward()
-rhos = r.grad
-print(rhos.item())
+
 print(f"price : {price}")

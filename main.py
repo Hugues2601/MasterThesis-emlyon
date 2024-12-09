@@ -5,7 +5,7 @@ from config import CONFIG
 
 def run():
     r = get_trasury_yield()
-    df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("AAPL")
+    df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("SPY")
     print(f"Nb of options: {len(lastPrice)}")
     calls_mean = sum(lastPrice) / len(lastPrice)
     print(f"mean price of options: {calls_mean}")

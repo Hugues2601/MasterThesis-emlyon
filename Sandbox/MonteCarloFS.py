@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 
 def MC_heston_forward_start():
     S0 = 100  # Initial stock price
-    r = 0.05  # Risk-free rate
+    r = 0.04  # Risk-free rate
     T1 = 1  # Forward start date
-    T2 = 2  # Maturity
-    K_ratio = 1  # Strike as a ratio of S(T1)
+    T2 = 3  # Maturity
+    K_ratio = 0.3  # Strike as a ratio of S(T1)
     n = 252  # Number of time steps
     dt = T2 / n
     M = 10000  # Number of simulations
@@ -18,11 +18,11 @@ def MC_heston_forward_start():
     S[:, 0] = S0
 
     # Heston parameters
-    Kappa = 2
-    v0 = 0.04
-    Theta = 0.04
-    sigma = 0.3
-    rho = -0.7
+    Kappa = 4.14
+    v0 = 0.01
+    Theta = 0.01
+    sigma = 0.07
+    rho = -0.89
     vt = np.zeros((M, n + 1))
     vt[:, 0] = v0
 

@@ -1,131 +1,93 @@
 import torch
+from config import CONFIG
+
+def fs_heston_cf(phi, S0, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
+    # Ensure that phi is a torch tensor on the GPU
+    if not isinstance(phi, torch.Tensor):
+        phi = torch.tensor(phi, dtype=torch.complex128, device=CONFIG.device)
+    else:
+        phi = phi.to(CONFIG.device).type(torch.complex128)
 
 
-def heston_cf(u, t, tau, hestonParams):
+    S0 = S0.to(CONFIG.device).type(torch.float64)
+    T0 = T0.to(CONFIG.device).type(torch.float64)
+    T1 = T1.to(CONFIG.device).type(torch.float64)
+    T2 = T2.to(CONFIG.device).type(torch.float64)
+    r = r.to(CONFIG.device).type(torch.float64)
 
-    kappa, theta, sigma, rho, v0 = hestonParams
+    tau = T2-T1
 
-    d = torch.sqrt((kappa - rho * sigma * u) * (kappa - rho * sigma * u) + u * (1. - u) * sigma * sigma)
+    delta = 4*kappa*theta/sigma**2
+    little_c_bar = sigma**2/(4*kappa) * (1 - torch.exp(-kappa*(T1-T0)))
+    kappa_bar = (4*kappa*v0*torch.exp(-kappa*(T1-T0))) / (sigma**2 * (1-torch.exp(-kappa*(T1-T0))))
+    d = torch.sqrt((kappa-rho*sigma*1j*phi)**2 + sigma**2 * (phi**2 + 1j * phi))
+    g = (kappa - rho*sigma*1j*phi-d)/(kappa-rho*sigma*1j*phi+d)
 
-    Gamma = (kappa - rho * sigma * u - d) / (kappa - rho * sigma * u + d)
+    A_bar = kappa*theta/sigma**2 * ((kappa - rho*sigma*1j*phi-d)*tau - 2*torch.log((1-g*torch.exp(-d*tau))/(1-g)))
+    C_bar = (1-torch.exp(-d*tau))/(sigma**2 * (1-g*torch.exp(-d*tau))) * (kappa-rho*sigma*1j*phi - d)
 
-    A = ((kappa * theta) / (sigma * sigma)) * (
-                (kappa - rho * sigma * u - d) * tau - 2. * torch.log((1. - Gamma * torch.exp(-d * tau)) / (1. - Gamma)))
-
-    B = (1. / (sigma * sigma)) * (kappa - rho * sigma * u - d) * (
-                (1. - torch.exp(-d * tau)) / (1. - Gamma * torch.exp(-d * tau)))
-
-    BBb = ((sigma * sigma) / (4. * kappa)) * (1. - torch.exp(-kappa * t))
-
-    cf_val = torch.exp(A
-                       + (B / (1. - 2. * BBb * B)) * (v0 * torch.exp(-kappa * t))
-                       - ((2. * kappa * theta) / (sigma * sigma)) * torch.log(1. - 2. * BBb * B))
-    return cf_val
-
-
-def heston_price(S0, K, t, tau, hestonParams, precision=20.0, N=2000):
-
-    kappa, theta, sigma, rho, v0 = hestonParams
-    alpha = 0.5
-    k = torch.log(K)
-
-    pp = heston_cf(torch.tensor(1.0, dtype=torch.complex64), t, tau, hestonParams).real
-
-    w = torch.linspace(-precision, precision, N, dtype=torch.float32)
-    dw = w[1] - w[0]
-
-    u = alpha + 1j * w
-    cf_val = heston_cf(u, t, tau, hestonParams)
-
-    denom = (u * (1. - alpha - 1j * w))
-    intPhi_val = torch.exp(-k * u) * cf_val / denom
-    intPhi_val_real = intPhi_val.real
-
-    integral = torch.trapz(intPhi_val_real, w)
-
-    price = S0*(pp - K / (2. * torch.pi) * integral)
-
-    return price.real
+    cf = torch.exp(A_bar + r*tau + (C_bar * little_c_bar*kappa_bar)/(1 - 2*C_bar*little_c_bar)) * (1/(1-2*C_bar*little_c_bar))**(delta/2)
+    return cf
 
 
-kappa = torch.tensor(2.1, dtype=torch.float64)
-theta = torch.tensor(0.03, dtype=torch.float64)
-sigma = torch.tensor(0.1, dtype=torch.float64, requires_grad=True)
-rho   = torch.tensor(-0.2, dtype=torch.float64)
-v0    = torch.tensor(0.05, dtype=torch.float64)
-S0 = torch.tensor(100, dtype=torch.float64, requires_grad=True)
+def fs_heston_price(S0, k, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
 
-hestonParams = (kappa, theta, sigma, rho, v0)
-
-k    = torch.tensor(1, dtype=torch.float64)
-t    = torch.tensor(1, dtype=torch.float64, requires_grad=True)
-tau  = torch.tensor(2, dtype=torch.float64, requires_grad=True)
-precision = 20.0
-
-price = heston_price(S0, k, t, tau, hestonParams, precision=precision)
-
-K_list = torch.linspace(0.05, 2, 100, dtype=torch.float64)  # par exemple 20 points entre 0.05 et 1.5
-
-deltas = []
-vegas = []
-thetas = []
+    # Vérification de la taille de K et T
+    assert k.dim() == 1, "K doit être un tenseur 1D"
+    assert T0.dim() == 1, "T doit être un tenseur 1D"
+    assert len(k) == len(T0), "K et T doivent avoir la même taille"
 
 
-for K_ in K_list:
-    # On crée un nouveau S0 avec gradient activé
-    S0_ = torch.tensor(100, dtype=torch.float64, requires_grad=True)
+    umax = 50
+    n = 100
+    if n % 2 == 0:
+        n += 1
 
-    # Calcul du prix
-    price = heston_price(S0_, K_, t, tau, hestonParams, precision=precision)
+    phi_values = torch.linspace(1e-5, umax, n, device=k.device)
+    du = (umax - 1e-5) / (n - 1)
 
-    # On remet à zéro les gradients si nécessaire (pas obligé si S0_ est créé chaque fois)
-    if S0_.grad is not None:
-        S0_.grad.zero_()
-    if sigma.grad is not None:
-        sigma.grad.zero_()
-    if t.grad is not None:
-        tau.grad.zero_()
+    phi_values = phi_values.unsqueeze(1).repeat(1, len(k))
 
-    # Backprop pour calculer dPrice/dS0
-    price.backward()
+    factor1 = torch.exp(-1j * phi_values * torch.log(k))
+    denominator = 1j * phi_values
 
-    # Récupération du delta
-    delta = S0_.grad.item()
-    vega = sigma.grad.item()  # dPrice/dsigma
-    theta_ = t.grad.item()  # dPrice/dtau
 
-    deltas.append(delta)
-    vegas.append(vega)
-    thetas.append(theta_)
+    cf1 = fs_heston_cf(phi_values - 1j, S0, T0, T1, T2, r, kappa, v0, theta, sigma, rho) / fs_heston_cf(-1j, S0, T0, T1, T2, r, kappa, v0, theta, sigma, rho)
+    temp1 = factor1 * cf1 / denominator
+    integrand_P1_values = 1 / torch.pi * torch.real(temp1)
 
-import matplotlib.pyplot as plt
 
-# Plot du Delta
-plt.figure(figsize=(10,6))
-plt.plot(K_list, deltas, 'o', label="Delta")
-plt.xlabel("Strike (K)")
-plt.ylabel("Delta")
-plt.title("Delta en fonction du Strike")
-plt.grid(True)
-plt.legend()
-plt.show()
+    cf2 = fs_heston_cf(phi_values, S0, T0, T1, T2, r, kappa, v0, theta, sigma, rho)
+    temp2 = factor1 * cf2 / denominator
+    integrand_P2_values = 1 / torch.pi * torch.real(temp2)
 
-# Plot du Vega
-plt.figure(figsize=(10,6))
-plt.plot(K_list, vegas, 'o', color='red', label="Vega")
-plt.xlabel("Strike (K)")
-plt.ylabel("Vega")
-plt.title("Vega en fonction du Strike")
-plt.grid(True)
-plt.legend()
-plt.show()
+    weights = torch.ones(n, device=k.device)
+    weights[1:-1:2] = 4
+    weights[2:-2:2] = 2
+    weights *= du / 3
+    weights = weights.unsqueeze(1).repeat(1, len(k))
 
-# Plot du Theta
-plt.figure(figsize=(10,6))
-plt.plot(K_list, thetas, 'o', color='green', label="Theta")
-plt.xlabel("Strike (K)")
-plt.ylabel("Theta")
-plt.title("Theta en fonction du Strike")
-plt.grid(True)
-plt.legend()
-plt.show()
+    integral_P1 = torch.sum(weights * integrand_P1_values, dim=0)
+    integral_P2 = torch.sum(weights * integrand_P2_values, dim=0)
+
+    P1 = torch.tensor(0.5, device=k.device) + integral_P1
+    P2 = torch.tensor(0.5, device=k.device) + integral_P2
+    price = S0 * (P1 - torch.exp(-r * (T2-T1)) * k * P2)
+    return price
+
+S0 = torch.tensor(100, device=CONFIG.device)
+k = torch.tensor([1], device=CONFIG.device)
+T0 = torch.tensor([0], device=CONFIG.device)
+T1 = torch.tensor([1], device=CONFIG.device)
+T2 = torch.tensor([2], device=CONFIG.device)
+r = torch.tensor(0.0, device=CONFIG.device)
+kappa = torch.tensor(2, device=CONFIG.device)
+v0 = torch.tensor(0.04, device=CONFIG.device)
+theta = torch.tensor(0.04, device=CONFIG.device)
+sigma = torch.tensor(0.2, device=CONFIG.device)
+rho = torch.tensor(-0.7, device=CONFIG.device)
+
+
+
+price = fs_heston_price(S0, k, T0, T1, T2, r, kappa, v0, theta, sigma, rho)
+print(price)

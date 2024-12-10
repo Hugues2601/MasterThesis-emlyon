@@ -11,7 +11,7 @@ def get_trasury_yield(symbol: str = "^TNX") -> float:
 
 """ --------------------- Options Data from Yahoo Finance ---------------------"""
 
-def get_yfinance_data(symbol: str):
+def get_yfinance_data(symbol: str, to_csv: bool = False):
     stock = yf.Ticker(symbol)
     spot_price = stock.history(period="1d")['Close'].iloc[-1]
 
@@ -47,19 +47,25 @@ def get_yfinance_data(symbol: str):
                        'impliedVolatility',
                        'moneyness',
                        'timetomaturity',
+                       'expiration',
                        'spot_price',
                        ]
     calls_list = calls_list[columns_to_keep]
     calls_list.reset_index(drop=True, inplace=True)
 
-    lastPrice = calls_list["lastPrice"].tolist()
-    strike = calls_list["strike"].tolist()
-    impliedVolatility = calls_list["impliedVolatility"].tolist()
-    moneyness = calls_list["moneyness"].tolist()
-    timetomaturity = calls_list["timetomaturity"].tolist()
-    spot_price = calls_list["spot_price"].tolist()
+    if to_csv:
+        calls_list.to_csv(f"C:\\Users\\hugue\\Desktop\\Master Thesis\\Data\\{datetime.now().strftime('%Y%m%d')}_{symbol}_clean.csv", index=False)
+        print("file saved")
 
-    return calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price
+    else:
+        lastPrice = calls_list["lastPrice"].tolist()
+        strike = calls_list["strike"].tolist()
+        impliedVolatility = calls_list["impliedVolatility"].tolist()
+        moneyness = calls_list["moneyness"].tolist()
+        timetomaturity = calls_list["timetomaturity"].tolist()
+        spot_price = calls_list["spot_price"].tolist()
+
+        return calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price
 
 
 

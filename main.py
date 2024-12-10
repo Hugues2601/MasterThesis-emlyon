@@ -3,7 +3,9 @@ from DataRetriever import get_yfinance_data, get_trasury_yield, store_to_csv
 from config import CONFIG
 
 
-def run():
+def run(input):
+    action = input["action"]
+
     # r = get_trasury_yield()
     # df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("SPY")
     # print(f"Nb of options: {len(lastPrice)}")
@@ -15,10 +17,16 @@ def run():
     # print("Calibrated Parameters:")
     # print(calibrated_params)
 
-
-    store_to_csv()
+    if action == "GET_AND_STORE_DATA":
+        store_to_csv()
 
 
 
 if __name__ == '__main__':
-    run()
+
+    input = {
+        "action" : "GET_AND_STORE_DATA"
+    }
+
+
+    run(input)

@@ -55,7 +55,7 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
 
     if to_csv:
         calls_list.to_csv(f"C:\\Users\\hugue\\Desktop\\Master Thesis\\Data\\{datetime.now().strftime('%Y%m%d')}_{symbol}_clean.csv", index=False)
-        print("file saved")
+        return None
 
     else:
         lastPrice = calls_list["lastPrice"].tolist()
@@ -66,6 +66,13 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
         spot_price = calls_list["spot_price"].tolist()
 
         return calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price
+
+def store_to_csv():
+    tickers = ["SPY", "^NDX", "^SPX", "^RUT", "AAPL", "NVDA", "NFLX", "XOM", "MSFT", "META"]
+    for ticker in tickers:
+        get_yfinance_data(ticker, to_csv=True)
+        print(f"{ticker} data saved as of {datetime.now().strftime('%Y%m%d')}")
+    print("all done")
 
 
 

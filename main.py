@@ -1,5 +1,5 @@
 from Calibrator import calibrate
-from DataRetriever import get_yfinance_data, get_trasury_yield
+from DataRetriever import get_yfinance_data, get_trasury_yield, store_to_csv
 from config import CONFIG
 
 
@@ -16,9 +16,7 @@ def run():
     # print(calibrated_params)
 
 
-    tickers = ["SPY", "^NDX", "^SPX", "^RUT", "AAPL", "NVDA", "NFLX", "XOM", "MSFT", "META"]
-    for ticker in tickers:
-        get_yfinance_data(ticker, to_csv=True)
+    store_to_csv()
 
 
 

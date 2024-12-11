@@ -79,21 +79,3 @@ def fs_heston_price(S0, k, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
     P2 = torch.tensor(0.5, device=k.device) + integral_P2
     price = S0 * (P1 - torch.exp(-r * (T2-T1)) * k * P2)
     return price
-
-S0 = torch.tensor(1, device=CONFIG.device)
-k = torch.tensor([0.7], device=CONFIG.device)
-T0 = torch.tensor([1], device=CONFIG.device)
-T1 = torch.tensor([2], device=CONFIG.device)
-T2 = torch.tensor([3], device=CONFIG.device)
-r = torch.tensor(0.04, device=CONFIG.device, requires_grad=True)
-kappa = torch.tensor(2.1, device=CONFIG.device)
-v0 = torch.tensor(0.05, device=CONFIG.device)
-theta = torch.tensor(0.03, device=CONFIG.device)
-sigma = torch.tensor(0.1, device=CONFIG.device)
-rho = torch.tensor(-0.2, device=CONFIG.device)
-
-
-
-price = fs_heston_price(S0, k, T0, T1, T2, r, kappa, v0, theta, sigma, rho)
-
-print(f"price : {price}")

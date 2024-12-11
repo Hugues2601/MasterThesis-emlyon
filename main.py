@@ -2,6 +2,7 @@ from Calibrator import calibrate
 from DataRetriever import get_yfinance_data, get_treasury_yield, store_to_csv
 from config import CONFIG
 from datetime import datetime
+from Greeks.FS_Greeks_AAD import GreeksFS
 
 def run(input):
     action = input.get("action", None)
@@ -15,7 +16,10 @@ def run(input):
         store_to_csv()
 
     if "RUN_FS_GREEKS" in action:
-        pass
+        FS = GreeksFS(100.0, 1, 0.0, 1.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.6)
+        delta = FS.calculate_greek("vega")
+
+        print(delta)
 
 
     # df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("SPY")
@@ -35,7 +39,7 @@ def run(input):
 if __name__ == '__main__':
 
     input = {
-        "actions" : ["GET_AND_STORE_DATA", "GET_TREASURY_YIELD"]
+        "action" : ["RUN_FS_GREEKS"],
     }
 
 

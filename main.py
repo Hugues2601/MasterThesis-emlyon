@@ -1,12 +1,14 @@
 from Calibrator import calibrate
-from DataRetriever import get_yfinance_data, get_trasury_yield, store_to_csv
+from DataRetriever import get_yfinance_data, get_treasury_yield, store_to_csv
 from config import CONFIG
-
+from datetime import datetime
 
 def run(input):
     action = input["action"]
 
-    # r = get_trasury_yield()
+    if "GET_TREASURY_YIELD" in action:
+        r = get_treasury_yield()
+        print(f"10y treasury yield as of {datetime.today()}: {r}")
     # df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("SPY")
     # print(f"Nb of options: {len(lastPrice)}")
     # calls_mean = sum(lastPrice) / len(lastPrice)
@@ -25,7 +27,7 @@ def run(input):
 if __name__ == '__main__':
 
     input = {
-        "action" : "GET_AND_STORE_DATA"
+        "action" : ["GET_AND_STORE_DATA", "GET_TREASURY_YIELD"]
     }
 
 

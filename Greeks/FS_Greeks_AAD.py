@@ -39,9 +39,11 @@ class GreeksFS:
             theta = self.T0.grad.item()
             greek.append(theta)
 
+# Gamma is ALWAYS 0 anyway for a forward start options after many computations I ran, which is coherent with the BS model
         elif greek_name == "gamma":
             delta = torch.autograd.grad(price, self.S0, create_graph=True)[0]
-            gamma = torch.autograd.grad(delta, self.S0)[0]
+            gamma = torch.autograd.grad(delta, self.S0, retain_graph=True)[0]
+            self.S0.grad = None
             greek.append(gamma)
 
         self.S0.grad = None

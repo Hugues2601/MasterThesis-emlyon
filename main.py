@@ -15,9 +15,12 @@ def run(input):
     if "GET_AND_STORE_DATA" in action:
         store_to_csv()
 
+    if "GET_FS_PRICE" in action:
+        pass
+
     if "RUN_SINGLE_FS_GREEK" in action:
         FS = GreeksFS(100.0, 1, 0.0, 1.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.6)
-        FS.calculate_greek("delta")
+        print(FS.calculate_greek("rho"))
 
     if "PLOT_ALL_FS_GREEKS" in action:
         FS = GreeksFS(100.0, 1, 0.0, 1.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.6)
@@ -45,7 +48,7 @@ def run(input):
 if __name__ == '__main__':
 
     input = {
-        "action" : ["RUN_FS_GREEKS"],
+        "action" : ["RUN_SINGLE_FS_GREEK",],
     }
 
 

@@ -15,11 +15,17 @@ def run(input):
     if "GET_AND_STORE_DATA" in action:
         store_to_csv()
 
-    if "RUN_FS_GREEKS" in action:
+    if "RUN_SINGLE_FS_GREEK" in action:
         FS = GreeksFS(100.0, 1, 0.0, 1.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.6)
-        delta = FS.calculate_greek("vega")
+        FS.calculate_greek("delta")
 
-        print(delta)
+    if "PLOT_ALL_FS_GREEKS" in action:
+        FS = GreeksFS(100.0, 1, 0.0, 1.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.6)
+        delta_plot = FS.plot_greek("delta")
+        vega_plot = FS.plot_greek("vega")
+        theta_plot = FS.plot_greek("theta")
+        rho_plot = FS.plot_greek("rho")
+
 
 
     # df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("SPY")

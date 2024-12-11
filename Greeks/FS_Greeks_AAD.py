@@ -19,7 +19,7 @@ class GreeksFS:
         self.sigma = torch.tensor(sigma, device=CONFIG.device, requires_grad=True)
         self.rho = torch.tensor(rho, device=CONFIG.device)
 
-    def calculate_greek(self, greek_name = "delta"):
+    def calculate_greek(self, greek_name: str):
         price = fs_heston_price(self.S0, self.k, self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho)
         price.backward()
         greek = []
@@ -63,7 +63,7 @@ class GreeksFS:
 
         for k in k_values:
             if greeks_dict[greek_name].grad is not None:
-                greeks_dict[greek_name].zero_()
+                greeks_dict[greek_name].grad = None
 
             price = fs_heston_price(self.S0, k.unsqueeze(0), self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho)
             price.backward()

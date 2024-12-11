@@ -8,7 +8,12 @@ def run(input):
 
     if "GET_TREASURY_YIELD" in action:
         r = get_treasury_yield()
-        print(f"10y treasury yield as of {datetime.today()}: {r}")
+        print(f"10y treasury yield as of {datetime.today()}: {r*100}%")
+
+    if "GET_AND_STORE_DATA" in action:
+        store_to_csv()
+
+
     # df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("SPY")
     # print(f"Nb of options: {len(lastPrice)}")
     # calls_mean = sum(lastPrice) / len(lastPrice)
@@ -19,8 +24,7 @@ def run(input):
     # print("Calibrated Parameters:")
     # print(calibrated_params)
 
-    if action == "GET_AND_STORE_DATA":
-        store_to_csv()
+
 
 
 

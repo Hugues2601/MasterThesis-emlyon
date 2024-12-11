@@ -4,7 +4,8 @@ from config import CONFIG
 from datetime import datetime
 
 def run(input):
-    action = input["action"]
+    action = input.get("action", None)
+    calibrator_ticker = input.get("calibrator_ticker", None)
 
     if "GET_TREASURY_YIELD" in action:
         r = get_treasury_yield()
@@ -12,6 +13,9 @@ def run(input):
 
     if "GET_AND_STORE_DATA" in action:
         store_to_csv()
+
+    if "RUN_FS_GREEKS" in action:
+        pass
 
 
     # df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("SPY")
@@ -31,7 +35,7 @@ def run(input):
 if __name__ == '__main__':
 
     input = {
-        "action" : ["GET_AND_STORE_DATA", "GET_TREASURY_YIELD"]
+        "actions" : ["GET_AND_STORE_DATA", "GET_TREASURY_YIELD"]
     }
 
 

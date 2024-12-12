@@ -3,9 +3,9 @@ import torch
 from config import CONFIG
 
 class HestonModel(ABC):
-    def __init__(self, S0, k, T, r, kappa, v0, theta, sigma, rho):
+    def __init__(self, S0, K, T, r, kappa, v0, theta, sigma, rho):
         self.S0 = torch.tensor(S0, device=CONFIG.device, requires_grad=True)
-        self.k = torch.tensor(k, device=CONFIG.device)
+        self.K = torch.tensor(K, device=CONFIG.device)
         self.T = torch.tensor(T, device=CONFIG.device, requires_grad=True)
         self.r = torch.tensor(r, device=CONFIG.device, requires_grad=True)
         self.kappa = torch.tensor(kappa, device=CONFIG.device)

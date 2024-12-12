@@ -30,8 +30,9 @@ def run(args):
         pass
 
     if "RUN_SINGLE_FS_GREEK" in action:
-        FS = GreeksFS(100.0, 1.0, 0.0, 1.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.6)
-        print(FS.calculate_greek("rho"))
+        FS = ForwardStart(100.0, 1.0, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7)
+        delta = FS.compute_delta()
+        print(f"delta is {delta.item()}")
 
     if "PLOT_ALL_FS_GREEKS" in action:
         FS = GreeksFS(100.0, 1.0, 0.0, 1.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.6)
@@ -59,7 +60,7 @@ def run(args):
 if __name__ == '__main__':
 
     input = {
-        "action" : ["COMPUTE_VANILLA_PRICE", "COMPUTE_FS_PRICE", "PLOT_ALL_FS_GREEKS"],
+        "action" : ["RUN_SINGLE_FS_GREEK",],
         "ticker" : "^RUT"
     }
 

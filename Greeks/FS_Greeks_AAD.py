@@ -20,68 +20,70 @@ class GreeksFS:
         self.rho = torch.tensor(rho, device=CONFIG.device)
 
     def calculate_greek(self, greek_name: str):
-        price = ForwardStart(self.S0, self.k, self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho).heston_price()
+        # Ensure the ForwardStart object is created once, using existing differentiable tensors
+        forward_start = ForwardStart(self.S0, self.k, self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho)
+        price = forward_start.heston_price()
         price.backward()
-        greek = []
+
         if greek_name == "delta":
-            delta = self.S0.grad.item()
-            greek.append(delta)
-
-        elif greek_name == "rho":
-            rho = self.r.grad.item()
-            greek.append(rho)
-
+            return self.S0.grad.item()
         elif greek_name == "vega":
-            vega = self.sigma.grad.item()
-            greek.append(vega)
-
+            return self.sigma.grad.item()
         elif greek_name == "theta":
-            theta = self.T0.grad.item()
-            greek.append(theta)
+            return self.T0.grad.item()
+        elif greek_name == "rho":
+            return self.r.grad.item()
+        else:
+            raise ValueError(f"Unknown greek: {greek_name}")
 
-# Gamma is ALWAYS 0 anyway for a forward start options after many computations I ran, which is coherent with the BS model
-        elif greek_name == "gamma":
-            delta = torch.autograd.grad(price, self.S0, create_graph=True)[0]
-            gamma = torch.autograd.grad(delta, self.S0, retain_graph=True)[0]
-            self.S0.grad = None
-            greek.append(gamma)
-
-        self.S0.grad = None
-        self.T0.grad = None
-        self.r.grad = None
-        self.sigma.grad = None
-
-        return greek[0]
-
-    def plot_greek(self, greek_name = "delta"):
-        greeks_dict = {
-            "delta" : self.S0,
-            "vega" : self.sigma,
-            "theta" : self.T0,
-            "rho" : self.r
-        }
-        k_values = torch.linspace(0.01, 2, steps=500, device=CONFIG.device)
-        greek = []
-
-        for k in k_values:
-            if greeks_dict[greek_name].grad is not None:
-                greeks_dict[greek_name].grad = None
-
-            price = ForwardStart(self.S0, k.unsqueeze(0), self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho).heston_price()
-            price.backward()
-            greek.append(greeks_dict[greek_name].grad.item())
-
-        k_values_cpu = k_values.cpu().detach().numpy()
-        greek_cpu = np.array(greek)
-
-        plt.figure(figsize=(8, 6))
-        plt.plot(k_values_cpu, greek_cpu, label=greek_name)
-        plt.xlabel('Strike (k)')
-        plt.ylabel(greek_name)
-        plt.title(greek_name)
-        plt.grid(True)
-        plt.legend()
-        plt.show()
+    # def plot_greek(self, greek_name="delta"):
+    #     # Dictionary mapping greek names to their respective tensors
+    #     greeks_dict = {
+    #         "delta": self.S0,
+    #         "vega": self.sigma,
+    #         "theta": self.T0,
+    #         "rho": self.r
+    #     }
+    #
+    #     if greek_name not in greeks_dict:
+    #         raise ValueError(f"Unsupported greek: {greek_name}")
+    #
+    #     tensor_to_differentiate = greeks_dict[greek_name]
+    #
+    #     k_values = torch.linspace(0.01, 2, steps=500, device=CONFIG.device)
+    #     greek_values = []
+    #
+    #     for k in k_values:
+    #         # Reset gradients before each computation
+    #         if tensor_to_differentiate.grad is not None:
+    #             tensor_to_differentiate.grad.zero_()
+    #
+    #         # Update k for the current iteration
+    #         self.k = torch.tensor([k.item()], device=CONFIG.device)
+    #         forward_start = ForwardStart(self.S0, self.k, self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho)
+    #         price = forward_start.heston_price()
+    #
+    #         # Compute gradient
+    #         price.backward()
+    #
+    #         grad = tensor_to_differentiate.grad
+    #         if grad is None:
+    #             raise RuntimeError(f"Gradient for {greek_name} is None at k={k.item()}.")
+    #
+    #         greek_values.append(grad.item())
+    #
+    #     # Convert to numpy for plotting
+    #     k_values_cpu = k_values.cpu().detach().numpy()
+    #     greek_values_cpu = np.array(greek_values)
+    #
+    #     plt.figure(figsize=(8, 6))
+    #     plt.plot(k_values_cpu, greek_values_cpu, label=greek_name)
+    #     plt.xlabel("Strike (k)")
+    #     plt.ylabel(greek_name)
+    #     plt.title(f"{greek_name} vs Strike")
+    #     plt.grid(True)
+    #     plt.legend()
+    #     plt.show()
 
 
     # def fs_delta(S0, T0, T1, T2, r, kappa, v0, theta, sigma, rho):

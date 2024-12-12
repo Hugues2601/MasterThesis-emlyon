@@ -68,3 +68,8 @@ class HestonModel(ABC):
     def heston_price(self):
         pass
 
+    def compute_delta(self):
+        price = self.heston_price()
+        delta = torch.autograd.grad(outputs=price, inputs=self.S0, grad_outputs=self.K, create_graph=True)[0]
+        return delta
+

@@ -47,4 +47,5 @@ class ForwardStart(HestonModel):
     def heston_price(self):
         P1, P2 = self._compute_integrals()
         price = self.S0 * (P1 - self.k * torch.exp(-self.r * (self.T2 - self.T1)) * P2)
+        print(f"S0 requires_grad in heston_price: {self.S0.requires_grad}")
         return price

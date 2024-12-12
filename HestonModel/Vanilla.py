@@ -83,3 +83,7 @@ class VanillaHestonPrice(HestonModel):
         P2 = torch.tensor(0.5, device=self.K.device) + integral_P2
         price = self.S0 * P1 - torch.exp(-self.r * self.T) * self.K * P2
         return price
+
+price = VanillaHestonPrice(100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7)
+price2 = price.heston_price()
+print(price2)

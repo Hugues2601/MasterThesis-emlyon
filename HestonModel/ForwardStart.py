@@ -16,12 +16,6 @@ class ForwardStart:
         self.rho = rho
 
 
-
-
-
-
-
-
 def fs_heston_cf(phi, S0, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
     # Ensure that phi is a torch tensor on the GPU
     if not isinstance(phi, torch.Tensor):

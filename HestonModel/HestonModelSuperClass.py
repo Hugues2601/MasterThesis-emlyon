@@ -19,7 +19,7 @@ class HestonModel(ABC):
         pass
 
 
-    def _compute_price(self):
+    def _compute_integrals(self):
 
         # Vérification de la taille de K et T
         assert self.K.dim() == 1, "K doit être un tenseur 1D"
@@ -61,7 +61,7 @@ class HestonModel(ABC):
 
         P1 = torch.tensor(0.5, device=self.K.device) + integral_P1
         P2 = torch.tensor(0.5, device=self.K.device) + integral_P2
-        # price = self.S0 * P1 - torch.exp(-self.r * self.T) * self.K * P2
+
         return P1, P2
 
     @abstractmethod

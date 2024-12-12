@@ -37,7 +37,7 @@ class VanillaHestonPrice(HestonModel):
         return cf
 
     def heston_price(self):
-        P1, P2 = self._compute_price()
+        P1, P2 = self._compute_integrals()
         price = self.S0 * P1 - self.K * torch.exp(-self.r * self.T) * P2
         return price
 

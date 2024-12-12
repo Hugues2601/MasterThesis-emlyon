@@ -1,4 +1,4 @@
-from HestonModelSuperClass import HestonModel
+from HestonModel.HestonModelSuperClass import HestonModel
 import torch
 from config import *
 
@@ -40,7 +40,3 @@ class VanillaHestonPrice(HestonModel):
         P1, P2 = self._compute_integrals()
         price = self.S0 * P1 - self.K * torch.exp(-self.r * self.T) * P2
         return price
-
-price = VanillaHestonPrice(100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7)
-price2 = price.heston_price()
-print(price2)

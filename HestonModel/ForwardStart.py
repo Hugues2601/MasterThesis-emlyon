@@ -1,5 +1,5 @@
 import torch
-from HestonModelSuperClass import HestonModel
+from HestonModel.HestonModelSuperClass import HestonModel
 from config import CONFIG
 
 class ForwardStart(HestonModel):
@@ -34,7 +34,7 @@ class ForwardStart(HestonModel):
         g = (self.kappa - self.rho*self.sigma*1j*phi-d)/(self.kappa-self.rho*self.sigma*1j*phi+d)
 
         A_bar = (
-                r * 1j * phi * tau
+                self.r * 1j * phi * tau
                 + (self.kappa * self.theta * tau / (self.sigma ** 2)) * (self.kappa - self.sigma * self.rho * 1j * phi - d)
                 - (2 * self.kappa * self.theta / (self.sigma ** 2)) * torch.log((1.0 - g * torch.exp(-d * tau)) / (1.0 - g))
         )
@@ -48,6 +48,3 @@ class ForwardStart(HestonModel):
         P1, P2 = self._compute_integrals()
         price = self.S0 * (P1 - self.k * torch.exp(-self.r * (self.T2 - self.T1)) * P2)
         return price
-
-price = ForwardStart(100.0, 1.0, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7)
-print(price.heston_price())

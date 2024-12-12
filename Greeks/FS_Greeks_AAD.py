@@ -1,5 +1,5 @@
-from HestonModel.ForwardStart import fs_heston_price
-from HestonModel.Vanilla import heston_price
+from HestonModel.ForwardStart import ForwardStart
+from HestonModel.Vanilla import VanillaHestonPrice
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,7 +20,7 @@ class GreeksFS:
         self.rho = torch.tensor(rho, device=CONFIG.device)
 
     def calculate_greek(self, greek_name: str):
-        price = fs_heston_price(self.S0, self.k, self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho)
+        price = ForwardStart(self.S0, self.k, self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho).heston_price()
         price.backward()
         greek = []
         if greek_name == "delta":
@@ -67,7 +67,7 @@ class GreeksFS:
             if greeks_dict[greek_name].grad is not None:
                 greeks_dict[greek_name].grad = None
 
-            price = fs_heston_price(self.S0, k.unsqueeze(0), self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho)
+            price = ForwardStart(self.S0, k.unsqueeze(0), self.T0, self.T1, self.T2, self.r, self.kappa, self.v0, self.theta, self.sigma, self.rho).heston_price()
             price.backward()
             greek.append(greeks_dict[greek_name].grad.item())
 

@@ -68,7 +68,7 @@ class HestonModel(ABC):
     def heston_price(self):
         pass
 
-    def compute_delta(self, K_values):
+    def compute_delta(self, plot=False):
 
         if self.S0.grad is not None:
             self.S0.grad.zero_()
@@ -77,3 +77,25 @@ class HestonModel(ABC):
         price.backward()
         delta = self.S0.grad.item()
         return delta
+
+    def compute_vega(self, plot=False):
+
+        if self.sigma.grad is not None:
+            self.sigma.grad.zero_()
+
+        price = self.heston_price()
+        price.backward()
+        vega = self.sigma.grad.item()
+        return vega
+
+    def compute_rho(self, plot=False):
+        if self.r.grad is not None:
+            self.r.grad.zero_()
+
+        price = self.heston_price()
+        price.backward()
+        rho = self.r.grad.item()
+        return rho
+
+
+

@@ -37,7 +37,7 @@ def run(args):
         k_values = torch.linspace(0.01, 2, 500)
         for k in k_values:
             FS = ForwardStart(100.0, k, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7)
-            delta = FS.compute_delta(k_values)
+            delta = FS.compute_vega(k_values)
             deltas.append(delta)
         plt.plot(k_values, deltas)
         plt.show()
@@ -68,7 +68,7 @@ def run(args):
 if __name__ == '__main__':
 
     input = {
-        "action" : ["RUN_SINGLE_FS_GREEK",],
+        "action" : ["RUN_SINGLE_FS_GREEK", "GET_AND_STORE_DATA"],
         "ticker" : "^RUT"
     }
 

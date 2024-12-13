@@ -1,5 +1,5 @@
 import torch
-
+import matplotlib.pyplot as plt
 from Calibrator import calibrate
 from HestonModel.ForwardStart import ForwardStart
 from HestonModel.Vanilla import VanillaHestonPrice
@@ -32,10 +32,15 @@ def run(args):
         pass
 
     if "RUN_SINGLE_FS_GREEK" in action:
-        FS = ForwardStart(100.0, 1, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7)
+        FS = ForwardStart(100.0, 1.05, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7)
+        deltas = []
         k_values = torch.linspace(0.01, 2, 500)
-        delta = FS.compute_delta(k_values)
-        print(f"delta is {delta}")
+        for k in k_values:
+            FS = ForwardStart(100.0, k, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7)
+            delta = FS.compute_delta(k_values)
+            deltas.append(delta)
+        plt.plot(k_values, deltas)
+        plt.show()
 
     if "PLOT_ALL_FS_GREEKS" in action:
         FS = GreeksFS(100.0, 1.0, 0.0, 1.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.6)

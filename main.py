@@ -57,7 +57,7 @@ def run(args):
 
 if __name__ == '__main__':
     input = {
-        "action": ["GET_TREASURY_YIELD", "CALIBRATE_HESTON_MODEL"],
+        "action": ["DISPLAY_FS_GREEKS"],
         "ticker": "^NDX",
         "params_fs" : [100.0, 1.0, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7],
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]

@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 class HestonModel(ABC):
     def __init__(self, S0, K, T, r, kappa, v0, theta, sigma, rho):
         self.S0 = torch.tensor(S0, device=CONFIG.device, requires_grad=True)
-        self.K = torch.tensor(K, device=CONFIG.device)
-        self.T = torch.tensor(T, device=CONFIG.device, requires_grad=True)
+        self.K = self._ensure_1d_tensor(torch.tensor(K, device=CONFIG.device))
+        self.T = self._ensure_1d_tensor(torch.tensor(T, device=CONFIG.device))
         self.r = torch.tensor(r, device=CONFIG.device, requires_grad=True)
         self.kappa = torch.tensor(kappa, device=CONFIG.device)
         self.v0 = torch.tensor(v0, device=CONFIG.device)
@@ -97,6 +97,14 @@ class HestonModel(ABC):
     def compute_second_order_greek(self, greek_name, plot=False):
         pass
 
+    def _ensure_1d_tensor(self, tensor):
+        """
+        Assure que l'entrée est un tenseur 1D.
+        Si l'entrée est un scalaire encapsulé dans un tenseur, elle sera transformée en 1D.
+        """
+        if tensor.dim() == 0:  # Si c'est un scalaire encapsulé
+            return tensor.unsqueeze(0)  # Convertir en tenseur 1D
+        return tensor
 
 
 

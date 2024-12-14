@@ -5,7 +5,7 @@ from config import CONFIG
 class ForwardStart(HestonModel):
     def __init__(self, S0, k, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
         super().__init__(S0=S0, K=k, T=T2, r=r, kappa=kappa, v0=v0, theta=theta, sigma=sigma, rho=rho)
-        self.k = torch.tensor(k, device=CONFIG.device)
+        self.k = self._ensure_1d_tensor(torch.tensor(k, device=CONFIG.device))
         self.T0 = torch.tensor(T0, device=CONFIG.device, requires_grad=True)
         self.T1 = torch.tensor(T1, device=CONFIG.device)
         self.T2 = torch.tensor(T2, device=CONFIG.device)

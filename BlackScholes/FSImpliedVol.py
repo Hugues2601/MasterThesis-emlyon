@@ -42,7 +42,7 @@ def FSImpliedVol_batch(k_values, T2):
     return torch.exp(theta).detach().cpu().numpy()
 
 # Différentes maturités T
-T = [1.2, 1.4, 1.6, 1.8, 2, 5]
+T = [1.2, 1.4, 1.6, 1.8, 2, 3]
 
 # Génération des strikes k
 k_values = np.linspace(0.2, 1.9, 500)

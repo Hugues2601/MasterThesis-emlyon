@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import torch
 from config import CONFIG
+import matplotlib.pyplot as plt
 
 class HestonModel(ABC):
     def __init__(self, S0, K, T, r, kappa, v0, theta, sigma, rho):
@@ -68,34 +69,53 @@ class HestonModel(ABC):
     def heston_price(self):
         pass
 
-    def compute_delta(self, plot=False):
+    @abstractmethod
+    def _compute_theta(self):
+        pass
 
-        if self.S0.grad is not None:
-            self.S0.grad.zero_()
+    def compute_first_order_greek(self, greek_name):
+        greeks = {
+            "delta" : self.S0,
+            "vega" : self.sigma,
+            "rho" : self.rho
+        }
 
-        price = self.heston_price()
-        price.backward()
-        delta = self.S0.grad.item()
-        return delta
+        if greek_name == "theta":
+            greek = self._compute_theta()
+            return greek
 
-    def compute_vega(self, plot=False):
+        elif greek_name in greeks:
+            variable = greeks[greek_name]
+            if variable.grad is not None:
+                variable.grad.zero_()
 
-        if self.sigma.grad is not None:
-            self.sigma.grad.zero_()
+            price = self.heston_price()
+            price.backward()
+            greek = variable.grad.item()
+            return greek
 
-        price = self.heston_price()
-        price.backward()
-        vega = self.sigma.grad.item()
-        return vega
+    def plot_first_order_greek(self, greek_name, k_range):
 
-    def compute_rho(self, plot=False):
-        if self.r.grad is not None:
-            self.r.grad.zero_()
+        greek_list = []
 
-        price = self.heston_price()
-        price.backward()
-        rho = self.r.grad.item()
-        return rho
+        for k in k_range:
+            self.K = torch.tensor([k], device=CONFIG.device)
+            greek = self.compute_first_order_greek(greek_name)
+            greek_list.append(greek)
+
+        plt.plot(k_range, greek_list)
+        plt.title(greek_name)
+        plt.xlabel("Strike")
+        plt.ylabel(f"{greek_name} value")
+        plt.grid(True)
+        plt.show()
+
+
+
+    def compute_second_order_greek(self, greek_name, plot=False):
+        pass
+
+
 
 
 

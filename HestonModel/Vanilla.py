@@ -40,3 +40,12 @@ class VanillaHestonPrice(HestonModel):
         P1, P2 = self._compute_integrals()
         price = self.S0 * P1 - self.K * torch.exp(-self.r * self.T) * P2
         return price
+
+    def _compute_theta(self):
+        if self.T.grad is not None:
+            self.T.grad.zero_()
+
+        price = self.heston_price()
+        price.backward()
+        greek = self.T.grad.item()
+        return greek

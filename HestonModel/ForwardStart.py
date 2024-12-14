@@ -48,3 +48,12 @@ class ForwardStart(HestonModel):
         P1, P2 = self._compute_integrals()
         price = self.S0 * (P1 - self.k * torch.exp(-self.r * (self.T2 - self.T1)) * P2)
         return price
+
+    def _compute_theta(self):
+        if self.T0.grad is not None:
+            self.T0.grad.zero_()
+
+        price = self.heston_price()
+        price.backward()
+        greek = self.T0.grad.item()
+        return greek

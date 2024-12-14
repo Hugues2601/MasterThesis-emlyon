@@ -1,6 +1,6 @@
 import torch
 from config import CONFIG
-from HestonModel.Vanilla import VanillaHestonPrice
+from Calibrator.HMCalibration import heston_price
 import numpy as np
 
 
@@ -34,7 +34,7 @@ def calibrate(S0, market_prices, K, T, r, initial_guess, max_epochs=10000, lr=0.
         rho = -torch.sigmoid(raw_rho)
 
         # Calcul des prix modèles
-        model_prices = VanillaHestonPrice(S0, K, T, r, kappa, v0, theta, sigma, rho).heston_price()
+        model_prices = heston_price(S0, K, T, r, kappa, v0, theta, sigma, rho)
         # Loss = Root Mean Squared Error
         loss = torch.sqrt(torch.mean((model_prices - market_prices) ** 2))
 

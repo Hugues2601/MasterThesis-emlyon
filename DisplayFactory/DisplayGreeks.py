@@ -27,7 +27,6 @@ class DisplayGreeks(DisplayManager):
             plt.ylabel(f"{greek} value")
             plt.grid(True)
 
-            # Calculer les positions pour ITM, ATM, OTM
             itm_index = 0  # k = 0.01
             atm_index = len(k_values) // 2  # k ≈ 1
             otm_index = -1  # k = 2
@@ -36,11 +35,9 @@ class DisplayGreeks(DisplayManager):
             atm_value = greek_list[atm_index]
             otm_value = greek_list[otm_index]
 
-            # Ajuster les décalages relatifs
-            vertical_offset = 0.1 * (max(greek_list) - min(greek_list))  # 10% de l'échelle
-            horizontal_offset = 0.05  # Petite distance horizontale
+            vertical_offset = 0.1 * (max(greek_list) - min(greek_list))
+            horizontal_offset = 0.05
 
-            # Ajouter les annotations avec flèches proportionnelles
             plt.annotate("ITM", xy=(k_values[itm_index], itm_value),
                          xytext=(k_values[itm_index] + horizontal_offset, itm_value + vertical_offset),
                          arrowprops=dict(facecolor='black', arrowstyle="->"), fontsize=10)
@@ -53,8 +50,6 @@ class DisplayGreeks(DisplayManager):
                          xytext=(k_values[otm_index] - horizontal_offset, otm_value + vertical_offset),
                          arrowprops=dict(facecolor='black', arrowstyle="->"), fontsize=10)
 
-            # Inverser l'axe des abscisses
             plt.gca().invert_xaxis()
 
-            # Afficher le graphique
             plt.show()

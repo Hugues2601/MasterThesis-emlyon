@@ -1,7 +1,7 @@
 from abc import abstractmethod
+from abc import ABC
 
-
-class DisplayManager:
+class DisplayManager(ABC):
     def __init__(self, S0, k, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
         self.S0 = S0
         self.k = k

@@ -16,9 +16,9 @@ class DisplayManager:
         self.rho = rho
 
     @abstractmethod
-    def _DataProcessing(self):
+    def _dataProcessing(self):
         pass
 
     @abstractmethod
-    def Display(self):
+    def display(self):
         pass

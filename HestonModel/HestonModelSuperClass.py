@@ -77,7 +77,7 @@ class HestonModel(ABC):
         greeks = {
             "delta" : self.S0,
             "vega" : self.sigma,
-            "rho" : self.rho
+            "rho" : self.r
         }
 
         if greek_name == "theta":

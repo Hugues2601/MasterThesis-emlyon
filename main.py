@@ -34,7 +34,7 @@ def run(args):
         print(delta)
 
     if "DISPLAY_FS_GREEKS" in action:
-        DisplayGreeks().display_all_greeks()
+        DisplayGreeks(100.0, 1.05, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7).display()
 
 
 

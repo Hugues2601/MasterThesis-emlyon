@@ -12,29 +12,31 @@ def run(args):
     action = args.get("action", None)
     calibrator_ticker = args.get("calibrator_ticker", None)
     ticker = args.get("ticker", None)
+    params_fs = args.get("params_fs", None)
+    params_vanilla = args.get("params_vanilla", None)
 
     if "GET_TREASURY_YIELD" in action:
         r = get_treasury_yield()
         print(f"10y treasury yield as of {datetime.today()}: {r*100}%")
 
     if "GET_VANILLA_PRICE" in action:
-        price = VanillaHestonPrice(100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7).heston_price()
+        price = VanillaHestonPrice(*params_vanilla).heston_price()
         print(f"Vanilla Heston price: {price.item()}")
 
     if "GET_FS_PRICE" in action:
-        price = ForwardStart(100.0, 1.0, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7).heston_price()
+        price = ForwardStart(*params_fs).heston_price()
         print(f"Forward Start price: {price.item()}")
 
     if "GET_AND_STORE_DATA" in action:
         store_to_csv()
 
     if "GET_SINGLE_FS_GREEK" in action:
-        FS = ForwardStart(100.0, 1.05, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7)
-        delta = FS.compute_first_order_greek("vega", plot=False)
+        FS = ForwardStart(*params_fs)
+        delta = FS.compute_first_order_greek("vega")
         print(delta)
 
     if "DISPLAY_FS_GREEKS" in action:
-        DisplayGreeks(100.0, 1.05, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7).display()
+        DisplayGreeks(*params_fs).display()
 
 
 
@@ -55,7 +57,9 @@ def run(args):
 if __name__ == '__main__':
     input = {
         "action": ["DISPLAY_FS_GREEKS"],
-        "ticker": "^RUT"
+        "ticker": "^RUT",
+        "params_fs" : [100.0, 1.0, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7],
+        "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }
 
     run(input)

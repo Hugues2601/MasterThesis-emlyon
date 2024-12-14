@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 class HestonModel(ABC):
     def __init__(self, S0, K, T, r, kappa, v0, theta, sigma, rho):
         self.S0 = torch.tensor(S0, device=CONFIG.device, requires_grad=True)
-        self.K = torch.tensor([K], device=CONFIG.device) if not isinstance(K, torch.Tensor) else K.to(CONFIG.device)
-        self.T = torch.tensor([T], device=CONFIG.device, requires_grad=True) if not isinstance(T, torch.Tensor) else T.to(CONFIG.device)
+        self.K = torch.tensor([K], device=CONFIG.device)
+        self.T = torch.tensor([T], device=CONFIG.device, requires_grad=True)
         self.r = torch.tensor(r, device=CONFIG.device, requires_grad=True)
         self.kappa = torch.tensor(kappa, device=CONFIG.device)
         self.v0 = torch.tensor(v0, device=CONFIG.device)
@@ -93,24 +93,6 @@ class HestonModel(ABC):
             price.backward()
             greek = variable.grad.item()
             return greek
-
-    def plot_first_order_greek(self, greek_name, k_range):
-
-        greek_list = []
-
-        for k in k_range:
-            self.K = torch.tensor([k], device=CONFIG.device)
-            greek = self.compute_first_order_greek(greek_name)
-            greek_list.append(greek)
-
-        plt.plot(k_range, greek_list)
-        plt.title(greek_name)
-        plt.xlabel("Strike")
-        plt.ylabel(f"{greek_name} value")
-        plt.grid(True)
-        plt.show()
-
-
 
     def compute_second_order_greek(self, greek_name, plot=False):
         pass

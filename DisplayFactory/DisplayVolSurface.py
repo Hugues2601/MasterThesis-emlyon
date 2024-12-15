@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 from scipy.interpolate import griddata
+from scipy.ndimage import gaussian_filter
 
 
 class DisplayVolSurface:
@@ -35,26 +36,31 @@ class DisplayVolSurface:
         # Créer une grille régulière pour la surface
         unique_strikes = np.unique(strike_clean)
         unique_times = np.unique(timetomaturity_clean)
-        X, Y = np.meshgrid(unique_strikes, unique_times)
+        X, Y = np.meshgrid(
+            np.linspace(unique_strikes.min(), unique_strikes.max(), 100),  # Plus de points
+            np.linspace(unique_times.min(), unique_times.max(), 100)
+        )
 
         # Interpoler les données de volatilité sur la grille
         Z = griddata(
-            (strike_clean, timetomaturity_clean),  # Points existants
-            impliedVolatility_clean,  # Volatilités correspondantes
-            (X, Y),  # Points de la nouvelle grille
-            method='linear'  # Méthode d'interpolation
+            (strike_clean, timetomaturity_clean),
+            impliedVolatility_clean,
+            (X, Y),
+            method='cubic'  # Méthode d'interpolation plus lisse
         )
 
-        # Tracer la surface de volatilité
+        Z_smoothed = gaussian_filter(Z, sigma=1.0)  # Ajuste sigma pour contrôler le niveau de lissage
+
+        # Tracer la surface lissée
         fig = plt.figure(figsize=(10, 7))
         ax = fig.add_subplot(111, projection='3d')
-        surf = ax.plot_surface(X, Y, Z, cmap='viridis', edgecolor='none', alpha=0.9)
+        surf = ax.plot_surface(X, Y, Z_smoothed, cmap='viridis', edgecolor='none', alpha=0.9)
 
         # Ajouter des étiquettes et une barre de couleur
         ax.set_xlabel('Strike Price')
         ax.set_ylabel('Time to Maturity (Years)')
         ax.set_zlabel('Implied Volatility')
-        ax.set_title('Volatility Surface')
+        ax.set_title('Smoothed Volatility Surface')
         fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
 
         plt.show()

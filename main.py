@@ -30,17 +30,14 @@ def run(args):
     if "DISPLAY_FS_GREEKS" in action:
         DisplayGreeks(*params_fs).display()
 
+    if "DISPLAY_TICKER_SURFACE" in action:
+        DisplayVolSurface(ticker).display()
+
     if "CALIBRATE_HESTON_MODEL" in action:
         df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(ticker)
-        # df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = process()
-        print(f"Nb of options: {len(lastPrice)}")
-        calls_mean = sum(lastPrice) / len(lastPrice)
-        print(f"mean price of options: {calls_mean}")
         S0 = spot_price[0]
-        initial_guess = CONFIG.initial_guess
-        calibrated_params = calibrate(S0, lastPrice, strike, timetomaturity, r, initial_guess, max_epochs=10000, loss_threshold=0.03*calls_mean)
-        print("Calibrated Parameters:")
-        print(calibrated_params)
+        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, 0.0430).calibrate()
+        print(f"Calibrated Parameters: {calibrated_params}")
 
 
 
@@ -48,8 +45,8 @@ def run(args):
 
 if __name__ == '__main__':
     input = {
-        "action": ["GET_TREASURY_YIELD", "DISPLAY_FS_GREEKS"],
-        "ticker": "XOM",
+        "action": ["DISPLAY_TICKER_SURFACE"],
+        "ticker": "SPY",
         "params_fs" : [100.0, 1.0, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7],
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }

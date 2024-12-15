@@ -1,7 +1,7 @@
 # imports.py
 
 # Imports pour la calibration
-from Calibrator.Calibrator import calibrate
+from Calibrator.Calibrator import Calibrator
 from Calibrator.HMCalibration import heston_price
 
 # Imports pour le modèle Heston

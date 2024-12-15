@@ -7,7 +7,7 @@ from scipy.optimize import brentq
 import numpy as np
 import matplotlib.pyplot as plt
 from DataRetriever import get_yfinance_data, agg_strikes_and_maturities
-from BlackScholes.VanillaBlackScholes import VanillaBlackScholes
+from BlackScholes.VanillaBlackScholes import VanillaBlackScholes, implied_vol
 from HestonModel.Vanilla import VanillaHestonPrice
 
 class ImpliedVolCalculator:
@@ -57,12 +57,12 @@ class ImpliedVolCalculator:
 
             # Prix avec le modèle Heston
             VHeston = VanillaHestonPrice(
-                S0=110.84, K=k_values, T=T_values, r=0.0430,
-                kappa=0.0430233, v0=0.0226336, theta=0.0361989, sigma=0.366999, rho=-0.03369866
+                S0=227.0, K=k_values, T=T_values, r=0.0430,
+                kappa=2.5523450663377627, v0=0.07137044270584143, theta=0.06785197235665712, sigma=0.48287590464830316, rho=-0.15608210823259677
             ).heston_price()
 
             VBS = VanillaBlackScholes(
-                S0=110.84, K=k_values, T=T_values, r=0.0430, sigma=sigma
+                S0=227.0, K=k_values, T=T_values, r=0.0430, sigma=sigma
             ).price()
 
             loss = torch.mean((VHeston - VBS) ** 2)
@@ -74,12 +74,13 @@ class ImpliedVolCalculator:
         return torch.exp(theta).detach().cpu().numpy()
 
 
+df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("XOM")
+vol = implied_vol(strike, timetomaturity, lastPrice)
 
-strike, timetomaturity, impliedvol = agg_strikes_and_maturities("XOM")
-print(timetomaturity, impliedvol)
+print(timetomaturity, vol)
 calc_IV = ImpliedVolCalculator(0, 0).VanillaImpliedVol(strike, timetomaturity)
 plt.plot(strike, calc_IV)
-plt.plot(strike, impliedvol)
+plt.plot(strike, vol)
 plt.show()
 
 

@@ -1,3 +1,4 @@
+from BlackScholes.VanillaBlackScholes import implied_vol
 from DisplayFactory.DisplayManager import DisplayManager
 from DataRetriever import get_yfinance_data
 import numpy as np
@@ -14,7 +15,8 @@ class DisplayVolSurface:
 
     def _dataProcessing(self):
         calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price  = get_yfinance_data(self.ticker)
-        return timetomaturity, impliedVolatility, strike
+        vol = implied_vol(strike, timetomaturity, lastPrice)
+        return timetomaturity, vol, strike
 
     def display(self):
         # Créer un DataFrame pour regrouper et nettoyer les données
@@ -46,21 +48,19 @@ class DisplayVolSurface:
             (strike_clean, timetomaturity_clean),
             impliedVolatility_clean,
             (X, Y),
-            method='cubic'  # Méthode d'interpolation plus lisse
+            method='linear'  # Méthode d'interpolation basique
         )
 
-        Z_smoothed = gaussian_filter(Z, sigma=1.0)  # Ajuste sigma pour contrôler le niveau de lissage
-
-        # Tracer la surface lissée
+        # Tracer la surface de volatilité
         fig = plt.figure(figsize=(10, 7))
         ax = fig.add_subplot(111, projection='3d')
-        surf = ax.plot_surface(X, Y, Z_smoothed, cmap='viridis', edgecolor='none', alpha=0.9)
+        surf = ax.plot_surface(X, Y, Z, cmap='viridis', edgecolor='none', alpha=0.9)
 
         # Ajouter des étiquettes et une barre de couleur
         ax.set_xlabel('Strike Price')
         ax.set_ylabel('Time to Maturity (Years)')
         ax.set_zlabel('Implied Volatility')
-        ax.set_title('Smoothed Volatility Surface')
+        ax.set_title('Volatility Surface')
         fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
 
         plt.show()

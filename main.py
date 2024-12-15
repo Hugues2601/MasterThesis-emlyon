@@ -5,7 +5,6 @@ from DataRetriever import get_treasury_yield, store_to_csv, get_yfinance_data
 from config import CONFIG
 from datetime import datetime
 from DisplayFactory.DisplayGreeks import DisplayGreeks
-from Sandbox.webscrapping import process
 from Calibrator.Calibrator import calibrate
 from Calibrator.HMCalibration import heston_price
 
@@ -58,7 +57,7 @@ def run(args):
 if __name__ == '__main__':
     input = {
         "action": ["GET_TREASURY_YIELD", "CALIBRATE_HESTON_MODEL"],
-        "ticker": "SPY",
+        "ticker": "XOM",
         "params_fs" : [100.0, 1.0, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7],
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }

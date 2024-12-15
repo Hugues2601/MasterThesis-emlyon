@@ -8,11 +8,11 @@ from scipy.interpolate import griddata
 
 
 class DisplayVolSurface:
-    def __init__(self):
-        pass
+    def __init__(self, ticker):
+        self.ticker = ticker
 
     def _dataProcessing(self):
-        calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price  = get_yfinance_data("XOM")
+        calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price  = get_yfinance_data(self.ticker)
         return timetomaturity, impliedVolatility, strike
 
     def display(self):
@@ -58,6 +58,3 @@ class DisplayVolSurface:
         fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
 
         plt.show()
-
-
-DisplayVolSurface().display()

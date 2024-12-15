@@ -1,12 +1,4 @@
-from Calibrator.Calibrator import calibrate
-from HestonModel.ForwardStart import ForwardStart
-from HestonModel.Vanilla import VanillaHestonPrice
-from DataRetriever import get_treasury_yield, store_to_csv, get_yfinance_data
-from config import CONFIG
-from datetime import datetime
-from DisplayFactory.DisplayGreeks import DisplayGreeks
-from Calibrator.Calibrator import calibrate
-from Calibrator.HMCalibration import heston_price
+from imports import *
 
 def run(args):
     action = args.get("action", None)
@@ -46,7 +38,7 @@ def run(args):
         print(f"mean price of options: {calls_mean}")
         S0 = spot_price[0]
         initial_guess = CONFIG.initial_guess
-        calibrated_params = calibrate(S0, lastPrice, strike, timetomaturity, r, initial_guess, max_epochs=5000, loss_threshold=0.03*calls_mean)
+        calibrated_params = calibrate(S0, lastPrice, strike, timetomaturity, r, initial_guess, max_epochs=10000, loss_threshold=0.03*calls_mean)
         print("Calibrated Parameters:")
         print(calibrated_params)
 
@@ -56,7 +48,7 @@ def run(args):
 
 if __name__ == '__main__':
     input = {
-        "action": ["GET_TREASURY_YIELD", "CALIBRATE_HESTON_MODEL"],
+        "action": ["GET_TREASURY_YIELD", "DISPLAY_FS_GREEKS"],
         "ticker": "XOM",
         "params_fs" : [100.0, 1.0, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7],
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]

@@ -19,37 +19,23 @@ class DisplayGreeks(DisplayManager):
     def display(self):
         k_values = torch.linspace(0.01, 2, 500)
         greeks = ["delta", "vega", "theta", "rho"]
+
         for greek in greeks:
             greek_list = self._dataProcessing(greek)
+
             plt.plot(k_values, greek_list, label=greek)
             plt.title(greek)
             plt.xlabel("k")
             plt.ylabel(f"{greek} value")
             plt.grid(True)
 
-            itm_index = 0  # k = 0.01
-            atm_index = len(k_values) // 2  # k ≈ 1
-            otm_index = -1  # k = 2
+            # Highlighting zones
+            plt.axvspan(0, 1, color='green', alpha=0.2, label="ITM Zone")  # ITM: k in [0, 1)
+            plt.axvline(1, color='blue', linestyle='--', label="ATM")  # ATM: k = 1
+            plt.axvspan(1, 2, color='red', alpha=0.2, label="OTM Zone")  # OTM: k in (1, 2]
 
-            itm_value = greek_list[itm_index]
-            atm_value = greek_list[atm_index]
-            otm_value = greek_list[otm_index]
-
-            vertical_offset = 0.1 * (max(greek_list) - min(greek_list))
-            horizontal_offset = 0.05
-
-            plt.annotate("ITM", xy=(k_values[itm_index], itm_value),
-                         xytext=(k_values[itm_index] + horizontal_offset, itm_value + vertical_offset),
-                         arrowprops=dict(facecolor='black', arrowstyle="->"), fontsize=10)
-
-            plt.annotate("ATM", xy=(k_values[atm_index], atm_value),
-                         xytext=(k_values[atm_index] + horizontal_offset, atm_value + vertical_offset),
-                         arrowprops=dict(facecolor='black', arrowstyle="->"), fontsize=10)
-
-            plt.annotate("OTM", xy=(k_values[otm_index], otm_value),
-                         xytext=(k_values[otm_index] - horizontal_offset, otm_value + vertical_offset),
-                         arrowprops=dict(facecolor='black', arrowstyle="->"), fontsize=10)
-
-            plt.gca().invert_xaxis()
+            # Add legend for zones
+            plt.legend(loc="upper right")
 
             plt.show()
+

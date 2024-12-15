@@ -36,10 +36,10 @@ class Calibrator:
 
         for epoch in range(max_epochs):
             optimizer.zero_grad()
-            kappa = 5*torch.sigmoid(raw_kappa)
-            sigma = 0.6*torch.sigmoid(raw_sigma)
-            v0 = torch.sigmoid(raw_v0)
-            theta = torch.sigmoid(raw_theta)
+            kappa = raw_kappa
+            sigma = raw_sigma
+            v0 = raw_v0
+            theta = raw_theta
             rho = -torch.sigmoid(raw_rho)
 
             model_prices = heston_price(S0, K, T, r, kappa, v0, theta, sigma, rho)

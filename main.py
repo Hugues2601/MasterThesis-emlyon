@@ -36,7 +36,7 @@ def run(args):
     if "CALIBRATE_HESTON_MODEL" in action:
         df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(ticker)
         S0 = spot_price[0]
-        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, 0.0430).calibrate()
+        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, 0.0430).calibrate(max_epochs=3000)
         print(f"Calibrated Parameters: {calibrated_params}")
 
 
@@ -46,7 +46,7 @@ def run(args):
 if __name__ == '__main__':
     input = {
         "action": ["DISPLAY_TICKER_SURFACE"],
-        "ticker": "SPY",
+        "ticker": "^RUT",
         "params_fs" : [100.0, 1.0, 0.0, 1.0, 3.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7],
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }

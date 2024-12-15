@@ -51,6 +51,28 @@ def implied_vol(k_values, T_values, market_prices):
     return torch.exp(theta).detach().cpu().numpy()
 
 calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data("SPY")
-newIV = implied_vol(strike, timetomaturity, lastPrice)
-print(newIV)
-print(impliedVolatility)
+unique_data = {}
+
+# Parcours des deux listes
+import pandas as pd
+
+# Création d'un DataFrame
+import pandas as pd
+
+# Créer un DataFrame avec les deux listes
+data = pd.DataFrame({
+    "timetomaturity": timetomaturity,
+    "strike": strike
+})
+
+# Supprimer les doublons
+unique_data = data.drop_duplicates()
+
+# Extraire les listes uniques
+unique_timetomaturity = unique_data["timetomaturity"].tolist()
+unique_strike = unique_data["strike"].tolist()
+
+
+# newIV = implied_vol(strike, timetomaturity, lastPrice)
+print(unique_strike)
+print(unique_timetomaturity)

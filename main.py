@@ -39,6 +39,10 @@ def run(args):
         calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, 0.0430).calibrate(max_epochs=3000)
         print(f"Calibrated Parameters: {calibrated_params}")
 
+    if "GET_YF_IV":
+        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(ticker)
+        vol = implied_vol(strike, timetomaturity, lastPrice)
+
 
 
 

@@ -19,6 +19,7 @@ class Calibrator:
         print(f"Nb of options: {len(self.market_prices)}")
         calls_mean = sum(self.market_prices) / len(self.market_prices)
         print(f"mean price of options: {calls_mean}")
+        print(f"spot price: {self.S0}")
         S0 = torch.tensor(self.S0, dtype=torch.float64, device=device)
         K = torch.tensor(self.K, dtype=torch.float64, device=device)
         T = torch.tensor(self.T, dtype=torch.float64, device=device)

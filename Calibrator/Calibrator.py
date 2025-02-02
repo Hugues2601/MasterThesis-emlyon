@@ -37,7 +37,7 @@ class Calibrator:
         for epoch in range(max_epochs):
             optimizer.zero_grad()
             kappa = raw_kappa
-            sigma = raw_sigma
+            sigma = torch.sigmoid(raw_sigma)
             v0 = raw_v0
             theta = raw_theta
             rho = -torch.sigmoid(raw_rho)

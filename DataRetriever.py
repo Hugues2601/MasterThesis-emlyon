@@ -1,13 +1,30 @@
 import pandas as pd
 import yfinance as yf
 from datetime import datetime
+import requests
 
 """ --------------- 10Y Treasury Yield --------------"""
 
-def get_treasury_yield(symbol: str = "^TNX") -> float:
-    data = yf.download(symbol, period="1d", interval="1d")
-    treasury_yield = (data["Close"].iloc[0])/100
-    return treasury_yield
+def get_treasury_yield() -> float:
+    url = "https://www.alphavantage.co/query"
+    params = {
+        "function": "TREASURY_YIELD",
+        "interval": "monthly",
+        "maturity": "10y",
+        "apikey": "YOUR_API_KEY"  # Remplace par ta clé API Alpha Vantage
+    }
+    response = requests.get(url, params=params)
+
+    if response.status_code != 200:
+        raise ConnectionError(f"API request failed with status code {response.status_code}")
+
+    data = response.json()
+
+    if "data" not in data or not data["data"]:
+        raise ValueError("No valid data found in API response")
+
+    return float(data["data"][0]["value"]) / 100
+
 
 """ --------------------- Options Data from Yahoo Finance ---------------------"""
 

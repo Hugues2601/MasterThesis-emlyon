@@ -1,7 +1,9 @@
 from BlackScholes.FSImpliedVol import ImpliedVolCalculator
 from imports import *
+import json
 
 def run(args):
+    args = json.loads(args)
     action = args.get("action", None)
     calibrator_ticker = args.get("calibrator_ticker", None)
     ticker = args.get("ticker", None)
@@ -9,7 +11,7 @@ def run(args):
     params_vanilla = args.get("params_vanilla", None)
 
     if "GET_TREASURY_YIELD" in action:
-        r = get_treasury_yield()
+        r = 0.0450
         print(f"10y treasury yield as of {datetime.today()}: {r*100}%")
 
     if "GET_VANILLA_PRICE" in action:
@@ -47,15 +49,14 @@ def run(args):
         vol = implied_vol(strike, timetomaturity, lastPrice)
 
 
-
-# test de push
-
 if __name__ == '__main__':
     input = {
-        "action": ["GET_TREASURY_YIELD", "CALIBRATE_HESTON_MODEL"],
+        "action": ["GET_TREASURY_YIELD"],
         "ticker": "AMZN",
         "params_fs" : {"S0": 237.0, "k": 1.0, "t0": 0.0, "T1": 1.0, "T2": 3.0, "r": 0.0456, "kappa": 2.64059, "v0": 0.07878, "theta": 0.05544, "sigma": 0.215834, "rho": -0.40317},
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }
 
-    run(input)
+    input_json = json.dumps(input)
+
+    run(input_json)

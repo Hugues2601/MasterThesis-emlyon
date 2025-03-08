@@ -51,7 +51,7 @@ def run(args):
 
 if __name__ == '__main__':
     input = {
-        "action": ["GET_TREASURY_YIELD"],
+        "action": ["GET_TREASURY_YIELD", "CALIBRATE_HESTON_MODEL"],
         "ticker": "AMZN",
         "params_fs" : {"S0": 237.0, "k": 1.0, "t0": 0.0, "T1": 1.0, "T2": 3.0, "r": 0.0456, "kappa": 2.64059, "v0": 0.07878, "theta": 0.05544, "sigma": 0.215834, "rho": -0.40317},
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]

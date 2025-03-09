@@ -7,7 +7,7 @@ class FSBlackScholes:
         self.S0 = torch.tensor([S0], device=CONFIG.device, dtype=torch.float64, requires_grad=True)
         self.k = torch.tensor(k, device=CONFIG.device,dtype=torch.float64)
         self.T1 = torch.tensor([T1],device=CONFIG.device, dtype=torch.float64)
-        self.T2 = torch.tensor([T2],device=CONFIG.device, dtype=torch.float64)
+        self.T2 = torch.tensor(T2,device=CONFIG.device, dtype=torch.float64)
         self.r = torch.tensor([r],device=CONFIG.device, dtype=torch.float64)
         self.sigma = sigma
 

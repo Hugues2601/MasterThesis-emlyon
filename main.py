@@ -33,12 +33,25 @@ def run(args):
         DisplayVolSurface(ticker).display_comparison(calc_IV)
 
     if "CALIBRATE_HESTON_MODEL" in action:
+        # Recuperation et traitement des données sur yf
         df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, to_csv=True)
         S0 = spot_price[0]
         r = risk_free_rate[0]
+        # Calibration de Heston
         calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=2000)
+        # Display graphique des prix du marché vs des prix calculés avec Heston et avec les parametres calibrés
         plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params)
         print(f"Calibrated Parameters: {calibrated_params}")
+        # Display du la vol implicite
+        ImpliedVolCalculator(S0=S0,
+                             k_values=[],
+                             T0=0.0, T1=1.0,
+                             T2=[], r=r,
+                             kappa=calibrated_params["kappa"],
+                             v0=calibrated_params["v0"],
+                             theta=calibrated_params["theta"],
+                             sigma=calibrated_params["sigma"],
+                             rho=calibrated_params["rho"]).plot_IV_smile()
 
     if "GET_YF_IV" in action:
         df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(ticker)
@@ -48,7 +61,7 @@ def run(args):
 
 if __name__ == '__main__':
     input = {
-        "action": ["DISPLAY_FS_GREEKS"],
+        "action": ["CALIBRATE_HESTON_MODEL"],
         "ticker": "SPY",
         "params_fs" : {"S0": 575.92, "k": 1.0, "t0": 0.0, "T1": 1.0, "T2": 3.0, "r": 0.04316, "kappa": 1.77271, "v0": 0.0222788, "theta": 0.00426840169840379, "sigma": 0.11711648513095249, "rho": -0.616869574660294},
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]

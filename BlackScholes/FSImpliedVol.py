@@ -9,7 +9,7 @@ from HestonModel.Vanilla import VanillaHestonPrice
 
 import torch
 
-class ImpliedVolCalculator:
+class ImpliedVolCalculatorFS:
     def __init__(self, S0, k_values, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
         self.S0 = S0
         self.k_values = k_values
@@ -78,7 +78,7 @@ class ImpliedVolCalculator:
         plt.gca().grid(True, color='white', linestyle='--', linewidth=0.7, alpha=0.8)
 
         for T in T_values:
-            IV_T = ImpliedVolCalculator(
+            IV_T = ImpliedVolCalculatorFS(
                 S0=self.S0,
                 k_values=k_values,
                 T0=self.T0,
@@ -92,12 +92,12 @@ class ImpliedVolCalculator:
                 rho=self.rho
             ).FSImpliedVol()
 
-            plt.plot(k_values, IV_T, label=f'T2 = {T}', linewidth=2)
+            plt.plot(k_values, IV_T, label=f'T2-T1 = {T-self.T1}', linewidth=2)
 
         # Personnalisation du graphique
         plt.xlabel('Strike (k)', fontsize=14)
         plt.ylabel('Implied Volatility (IV)', fontsize=14)
-        plt.title('Implied Volatility vs Strike (k) for Different Maturities (T)', fontsize=16)
+        plt.title('Forward Start Heston Calls - Implied Volatility for Different Maturities (T)', fontsize=14)
         plt.legend(fontsize=12, loc='upper left', bbox_to_anchor=(1,1))
         plt.tight_layout()
 
@@ -110,107 +110,3 @@ class ImpliedVolCalculator:
 
         # Affichage
         plt.show()
-
-
-# # Différentes maturités T
-# T_values = [1.2, 1.4, 1.6, 1.8, 2, 3]
-#
-# # Génération des strikes k
-# k_values = np.linspace(0.2, 1.9, 500).tolist()  # Converti en liste pour correspondre à la classe
-#
-# # Initialisation de la figure
-# plt.figure(figsize=(12, 8))
-#
-# # Définir un fond gris
-# plt.gca().set_facecolor('#e6e6e6')  # Couleur de fond gris clair
-# plt.gca().grid(True, color='white', linestyle='--', linewidth=0.7, alpha=0.8)
-#
-# # Paramètres fixes
-# S0 = 227.46
-# T0 = 0.0
-# T1 = 1.0
-# r = 0.0410
-# kappa = 0.372638
-# v0 = 0.066769
-# theta = 0.102714
-# sigma = 0.405173
-# rho = -0.30918
-#
-# for T in T_values:
-#     IV_T = ImpliedVolCalculator(
-#         S0=S0,
-#         k_values=k_values,
-#         T0=T0,
-#         T1=T1,
-#         T2=[T] * len(k_values),  # Liste de T2 de même longueur que k_values
-#         r=r,
-#         kappa=kappa,
-#         v0=v0,
-#         theta=theta,
-#         sigma=sigma,
-#         rho=rho
-#     ).FSImpliedVol()
-#
-#     plt.plot(k_values, IV_T, label=f'T2 = {T}', linewidth=2)
-#
-# # Personnalisation du graphique
-# plt.xlabel('Strike (k)', fontsize=14)
-# plt.ylabel('Implied Volatility (IV)', fontsize=14)
-# plt.title('Implied Volatility vs Strike (k) for Different Maturities (T)', fontsize=16)
-# plt.legend(fontsize=12)
-# plt.tight_layout()
-#
-# # Affichage du graphique avec bordure grise
-# plt.gca().spines['top'].set_visible(False)
-# plt.gca().spines['right'].set_visible(False)
-# plt.gca().spines['left'].set_color('#4f4f4f')  # Bordure gauche
-# plt.gca().spines['bottom'].set_color('#4f4f4f')  # Bordure inférieure
-# plt.gca().tick_params(colors='black')  # Couleur des ticks
-#
-# # Affichage
-# plt.show()
-
-
-
-
-
-#
-#
-# # Différentes maturités T
-# T = [.2, .4, .6, .8, 1, 2]
-#
-# # Génération des strikes k
-# k_values = np.linspace(170, 280, 500)
-#
-# # Initialisation de la figure
-# plt.figure(figsize=(12, 8))
-#
-# # Définir un fond gris
-# plt.gca().set_facecolor('#e6e6e6')  # Couleur de fond gris clair
-# plt.gca().grid(True, color='white', linestyle='--', linewidth=0.7, alpha=0.8)
-#
-# for t in T:
-#     IV_T = ImpliedVolCalculator(k_values, t).VanillaImpliedVol()
-#     plt.plot(k_values, IV_T, label=f'T2 = {t}', linewidth=2)
-#
-# # Personnalisation du graphique
-# plt.xlabel('Strike (k)', fontsize=14)
-# plt.ylabel('Implied Volatility (IV)', fontsize=14)
-# plt.title('Implied Volatility vs Strike (k) for Different Maturities (T)', fontsize=16)
-# plt.legend(fontsize=12)
-# plt.tight_layout()
-#
-# # Affichage du graphique avec bordure grise
-# plt.gca().spines['top'].set_visible(False)
-# plt.gca().spines['right'].set_visible(False)
-# plt.gca().spines['left'].set_color('#4f4f4f')  # Bordure gauche
-# plt.gca().spines['bottom'].set_color('#4f4f4f')  # Bordure inférieure
-# plt.gca().tick_params(colors='black')  # Couleur des ticks
-#
-# # Affichage
-# plt.show()
-#
-#
-
-
-

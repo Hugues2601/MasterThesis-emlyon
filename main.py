@@ -1,4 +1,5 @@
 from BlackScholes.FSImpliedVol import ImpliedVolCalculator
+from Calibrator.Calibrator import plot_heston_vs_market
 from imports import *
 import json
 
@@ -39,9 +40,10 @@ def run(args):
         DisplayVolSurface(ticker).display_comparison(calc_IV)
 
     if "CALIBRATE_HESTON_MODEL" in action:
-        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(ticker, to_csv=True, normalize=False)
+        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(ticker)
         S0 = spot_price[0]
-        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, 0.0430).calibrate(max_epochs=4000)
+        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, 0.0430).calibrate(max_epochs=2000)
+        plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, 0.0430, calibrated_params)
         print(f"Calibrated Parameters: {calibrated_params}")
 
     if "GET_YF_IV" in action:

@@ -4,6 +4,8 @@ from DataRetriever import get_yfinance_data
 from config import CONFIG
 from Calibrator.HMCalibration import heston_price
 import numpy as np
+from HestonModel.Vanilla import VanillaHestonPrice
+import matplotlib.pyplot as plt
 
 class Calibrator:
     def __init__(self, S0, market_prices, K, T, r):
@@ -19,6 +21,7 @@ class Calibrator:
         print(f"Nb of options: {len(self.market_prices)}")
         calls_mean = sum(self.market_prices) / len(self.market_prices)
         print(f"mean price of options: {calls_mean}")
+        print(f"Standard Deviation of Options Prices: {np.std(self.market_prices)}")
         print(f"spot price: {self.S0}")
         S0 = torch.tensor(self.S0, dtype=torch.float64, device=device)
         K = torch.tensor(self.K, dtype=torch.float64, device=device)
@@ -67,3 +70,39 @@ class Calibrator:
         return calibrated_params
 
 
+def plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params):
+    """
+    Plots the market prices vs Heston model prices using calibrated parameters.
+
+    Parameters:
+    - S0: Spot price of the underlying asset.
+    - lastPrice: List of observed market prices of the options.
+    - strike: List of strike prices.
+    - timetomaturity: List of times to maturity.
+    - r: Risk-free interest rate.
+    - calibrated_params: Calibrated parameters from the Heston model (kappa, v0, theta, sigma, rho).
+    """
+
+    kappa = float(calibrated_params["kappa"])
+    v0 = float(calibrated_params["v0"])
+    theta = float(calibrated_params["theta"])
+    sigma = float(calibrated_params["sigma"])
+    rho = float(calibrated_params["rho"])
+
+    heston_prices = []
+
+    for K, T in zip(strike, timetomaturity):
+        model = VanillaHestonPrice(S0, K, T, r, kappa, v0, theta, sigma, rho)
+        price = model.heston_price().item()
+        heston_prices.append(price)
+
+    # Plot the results
+    plt.figure(figsize=(10, 6))
+    plt.scatter(strike, lastPrice, color='blue', label='Market Prices')
+    plt.scatter(strike, heston_prices, color='red', marker='x', label='Heston Model Prices')
+    plt.xlabel('Strike Price')
+    plt.ylabel('Option Price')
+    plt.title('Market Prices vs Heston Model Prices')
+    plt.legend()
+    plt.grid()
+    plt.show()

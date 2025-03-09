@@ -28,7 +28,7 @@ def get_treasury_yield() -> float:
 
 """ --------------------- Options Data from Yahoo Finance ---------------------"""
 
-def get_yfinance_data(symbol: str, to_csv: bool = False, normalize: bool = False):
+def get_yfinance_data(symbol: str, to_csv: bool = False):
     stock = yf.Ticker(symbol)
     spot_price = stock.history(period="1d")['Close'].iloc[-1]
 
@@ -52,9 +52,9 @@ def get_yfinance_data(symbol: str, to_csv: bool = False, normalize: bool = False
 
     calls_list = all_calls[
         (all_calls["moneyness"] > 0.8) & (all_calls["moneyness"] < 1.2) &
-        (all_calls["timetomaturity"] > 0.5) & (all_calls["timetomaturity"] < 4) &
+        (all_calls["timetomaturity"] > 0.2) & (all_calls["timetomaturity"] < 4) &
         (all_calls["volume"] > 0) &
-        (all_calls["openInterest"] > 5) &
+        (all_calls["openInterest"] > 10) &
         (all_calls["impliedVolatility"] < 1) & (all_calls["impliedVolatility"] > 0.05)
     ]
 
@@ -83,14 +83,7 @@ def get_yfinance_data(symbol: str, to_csv: bool = False, normalize: bool = False
     timetomaturity = calls_list["timetomaturity"].tolist()
     spot_price = calls_list["spot_price"].tolist()
 
-    lastPrice_norm = calls_list["lastPrice_norm"].tolist()
-    strike_norm = calls_list["strike_norm"].tolist()
-    spot_norm = [1]
-
-    if normalize:
-        return calls_list, lastPrice_norm, timetomaturity, impliedVolatility, strike_norm, spot_norm
-    else:
-        return calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price
+    return calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price
 
 def agg_strikes_and_maturities(symbol:str):
     calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(symbol)

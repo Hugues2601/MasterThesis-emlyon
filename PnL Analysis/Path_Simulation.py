@@ -6,7 +6,7 @@ from HestonModel.ForwardStart import ForwardStart
 
 # Définition de la classe HestonSimulator
 class HestonSimulator:
-    def __init__(self, S0, r, kappa, theta, sigma, rho, v0, T, dt, n_paths=1, device="cpu"):
+    def __init__(self, S0, r, kappa, theta, sigma, rho, v0, T, dt, n_paths=1, device="cuda"):
         self.S0 = S0
         self.r = r
         self.kappa = kappa
@@ -127,15 +127,21 @@ print(f"PnL expliqué : {PnL_explained:.4f}")
 PnL_inexpliqué = (price_t1 - price_t) - PnL_explained
 print(f"PnL inexpliqué : {PnL_inexpliqué:.4f}")
 
-import numpy as np
+import torch
 import matplotlib.pyplot as plt
-from scipy.stats import shapiro
+import scipy.stats as stats
+
+# Vérification du GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Utilisation de {device}")
 
 # Paramètres
-num_simulations = 1000  # Nombre d'itérations pour analyser la distribution du PnL inexpliqué
-PnL_inexpliqué_list = []
+num_simulations = 1000
+PnL_inexpliqué_list = torch.zeros(num_simulations, device=device)
 
-for _ in range(num_simulations):
+j=0
+for i in range(num_simulations):
+    j+=1
     # Simulation d'une trajectoire
     S_traj, v_traj = simulator.simulate()
 
@@ -155,50 +161,58 @@ for _ in range(num_simulations):
                          sigma=params["sigma"], rho=params["rho"])
 
     # Calcul des prix
-    price_t = fs_t.heston_price().item()
-    price_t1 = fs_t1.heston_price().item()
+    price_t = torch.tensor(fs_t.heston_price().item(), device=device)
+    price_t1 = torch.tensor(fs_t1.heston_price().item(), device=device)
 
     # Calcul du PnL total
     PnL_total = price_t1 - price_t
 
     # Calcul des Grecs
-    delta_t = fs_t.compute_first_order_greek("delta")
-    vega_t = fs_t.compute_first_order_greek("vega")
-    rho_t = fs_t.compute_first_order_greek("rho")
-    theta_t = fs_t.compute_first_order_greek("theta")
+    delta_t = torch.tensor(fs_t.compute_first_order_greek("delta"), device=device)
+    vega_t = torch.tensor(fs_t.compute_first_order_greek("vega"), device=device)
+    rho_t = torch.tensor(fs_t.compute_first_order_greek("rho"), device=device)
+    theta_t = torch.tensor(fs_t.compute_first_order_greek("theta"), device=device)
 
     # Calcul du PnL expliqué
-    dS = S_t1 - S_t
-    dV = v_t1 - v_t
-    dr = r_t1 - r_t
-    dT = -params["dt"]
+    dS = torch.tensor(S_t1 - S_t, device=device)
+    dV = torch.tensor(v_t1 - v_t, device=device)
+    dr = torch.tensor(r_t1 - r_t, device=device)
+    dT = torch.tensor(-params["dt"], device=device)
 
     PnL_explained = delta_t * dS + vega_t * dV + rho_t * dr + theta_t * dT
 
     # Calcul du PnL inexpliqué
-    PnL_inexpliqué = PnL_total - PnL_explained
-    PnL_inexpliqué_list.append(PnL_inexpliqué)
-
-# Conversion en array NumPy pour analyse
-PnL_inexpliqué_list = np.array(PnL_inexpliqué_list)
+    PnL_inexpliqué_list[i] = PnL_total - PnL_explained
+    print(j)
 
 # 🔹 Analyse statistique
-mean_pnl_inexpliqué = np.mean(PnL_inexpliqué_list)
-std_pnl_inexpliqué = np.std(PnL_inexpliqué_list)
-shapiro_test = shapiro(PnL_inexpliqué_list[:500])  # Test de normalité sur 500 valeurs max
+mean_pnl_inexpliqué = torch.mean(PnL_inexpliqué_list).item()
+std_pnl_inexpliqué = torch.std(PnL_inexpliqué_list).item()
+
+# Test de normalité basé sur skewness et kurtosis (sans numpy)
+skewness = torch.mean((PnL_inexpliqué_list - mean_pnl_inexpliqué) ** 3) / std_pnl_inexpliqué ** 3
+kurtosis = torch.mean((PnL_inexpliqué_list - mean_pnl_inexpliqué) ** 4) / std_pnl_inexpliqué ** 4
 
 # 🔥 Affichage des résultats
 print(f"Moyenne du PnL inexpliqué : {mean_pnl_inexpliqué:.6f}")
 print(f"Écart-type du PnL inexpliqué : {std_pnl_inexpliqué:.6f}")
-print(f"Test de normalité de Shapiro-Wilk (p-value) : {shapiro_test.pvalue:.6f}")
+print(f"Skewness : {skewness.item():.6f}")
+print(f"Kurtosis : {kurtosis.item():.6f}")
 
 # 📊 Histogramme du PnL inexpliqué
 plt.figure(figsize=(10, 5))
-plt.hist(PnL_inexpliqué_list, bins=50, alpha=0.7, color='blue', edgecolor='black')
+plt.hist(PnL_inexpliqué_list.cpu().tolist(), bins=50, alpha=0.7, color='blue', edgecolor='black')
 plt.axvline(mean_pnl_inexpliqué, color='red', linestyle='dashed', linewidth=2, label="Moyenne")
 plt.xlabel("PnL inexpliqué")
 plt.ylabel("Fréquence")
 plt.title("Distribution du PnL inexpliqué sur 1000 simulations")
 plt.legend()
+plt.grid()
+plt.show()
+
+# 📈 Q-Q Plot
+plt.figure(figsize=(8, 6))
+stats.probplot(PnL_inexpliqué_list.cpu().numpy(), dist="norm", sparams=(mean_pnl_inexpliqué, std_pnl_inexpliqué), plot=plt)
+plt.title("Q-Q Plot du PnL inexpliqué")
 plt.grid()
 plt.show()

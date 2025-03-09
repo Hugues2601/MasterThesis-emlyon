@@ -79,30 +79,6 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
 
     return calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate
 
-def agg_strikes_and_maturities(symbol:str):
-    calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(symbol)
-    # Créer un DataFrame avec les données
-    df = pd.DataFrame({
-        'strike': strike,
-        'timetomaturity': timetomaturity,
-        'impliedVolatility': impliedVolatility
-    })
-
-    df_cleaned = df.groupby(['strike', 'timetomaturity'], as_index=False).mean()
-
-    strike_cleaned = df_cleaned['strike'].tolist()
-    timetomaturity_cleaned = df_cleaned['timetomaturity'].tolist()
-    impliedVolatility_cleaned = df_cleaned['impliedVolatility'].tolist()
-
-    return strike_cleaned, timetomaturity_cleaned, impliedVolatility_cleaned
-
-def store_to_csv():
-    tickers = ["SPY", "^NDX", "^SPX", "^RUT", "AAPL", "NVDA", "NFLX", "XOM", "MSFT", "META"]
-    for ticker in tickers:
-        get_yfinance_data(ticker, to_csv=True)
-        print(f"{ticker} data saved as of {datetime.now().strftime('%Y%m%d')}")
-    print("all done")
-
 
 
 

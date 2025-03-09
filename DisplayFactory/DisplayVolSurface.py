@@ -14,7 +14,7 @@ class DisplayVolSurface:
         self.ticker = ticker
 
     def _dataProcessing(self):
-        calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price  = get_yfinance_data(self.ticker)
+        calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate  = get_yfinance_data(self.ticker)
         vol = implied_vol(strike, timetomaturity, lastPrice)
         return timetomaturity, vol, strike
 

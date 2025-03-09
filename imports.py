@@ -10,7 +10,7 @@ from HestonModel.Vanilla import VanillaHestonPrice
 from BlackScholes.VanillaBlackScholes import implied_vol
 
 # Imports pour la récupération de données
-from DataRetriever import get_treasury_yield, store_to_csv, get_yfinance_data
+from DataRetriever import get_treasury_yield, get_yfinance_data
 
 # Imports pour les configurations
 from config import CONFIG

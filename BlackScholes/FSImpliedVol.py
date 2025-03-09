@@ -5,7 +5,6 @@ from config import CONFIG
 from scipy.optimize import brentq
 import numpy as np
 import matplotlib.pyplot as plt
-from DataRetriever import get_yfinance_data, agg_strikes_and_maturities
 from BlackScholes.VanillaBlackScholes import VanillaBlackScholes, implied_vol
 from HestonModel.Vanilla import VanillaHestonPrice
 
@@ -83,39 +82,39 @@ class ImpliedVolCalculator:
 # plt.show()
 
 
-# # Différentes maturités T
-# T = [1.2, 1.4, 1.6, 1.8, 2, 3]
-#
-# # Génération des strikes k
-# k_values = np.linspace(0.2, 1.9, 500)
-#
-# # Initialisation de la figure
-# plt.figure(figsize=(12, 8))
-#
-# # Définir un fond gris
-# plt.gca().set_facecolor('#e6e6e6')  # Couleur de fond gris clair
-# plt.gca().grid(True, color='white', linestyle='--', linewidth=0.7, alpha=0.8)
-#
-# for t in T:
-#     IV_T = ImpliedVolCalculator(k_values, t).FSImpliedVol()
-#     plt.plot(k_values, IV_T, label=f'T2 = {t}', linewidth=2)
-#
-# # Personnalisation du graphique
-# plt.xlabel('Strike (k)', fontsize=14)
-# plt.ylabel('Implied Volatility (IV)', fontsize=14)
-# plt.title('Implied Volatility vs Strike (k) for Different Maturities (T)', fontsize=16)
-# plt.legend(fontsize=12)
-# plt.tight_layout()
-#
-# # Affichage du graphique avec bordure grise
-# plt.gca().spines['top'].set_visible(False)
-# plt.gca().spines['right'].set_visible(False)
-# plt.gca().spines['left'].set_color('#4f4f4f')  # Bordure gauche
-# plt.gca().spines['bottom'].set_color('#4f4f4f')  # Bordure inférieure
-# plt.gca().tick_params(colors='black')  # Couleur des ticks
-#
-# # Affichage
-# plt.show()
+# Différentes maturités T
+T = [1.2, 1.4, 1.6, 1.8, 2, 3]
+
+# Génération des strikes k
+k_values = np.linspace(0.2, 1.9, 500)
+
+# Initialisation de la figure
+plt.figure(figsize=(12, 8))
+
+# Définir un fond gris
+plt.gca().set_facecolor('#e6e6e6')  # Couleur de fond gris clair
+plt.gca().grid(True, color='white', linestyle='--', linewidth=0.7, alpha=0.8)
+
+for t in T:
+    IV_T = ImpliedVolCalculator(k_values, t).FSImpliedVol()
+    plt.plot(k_values, IV_T, label=f'T2 = {t}', linewidth=2)
+
+# Personnalisation du graphique
+plt.xlabel('Strike (k)', fontsize=14)
+plt.ylabel('Implied Volatility (IV)', fontsize=14)
+plt.title('Implied Volatility vs Strike (k) for Different Maturities (T)', fontsize=16)
+plt.legend(fontsize=12)
+plt.tight_layout()
+
+# Affichage du graphique avec bordure grise
+plt.gca().spines['top'].set_visible(False)
+plt.gca().spines['right'].set_visible(False)
+plt.gca().spines['left'].set_color('#4f4f4f')  # Bordure gauche
+plt.gca().spines['bottom'].set_color('#4f4f4f')  # Bordure inférieure
+plt.gca().tick_params(colors='black')  # Couleur des ticks
+
+# Affichage
+plt.show()
 
 
 

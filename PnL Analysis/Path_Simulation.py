@@ -172,12 +172,15 @@ for i in range(num_simulations):
     vega_t = torch.tensor(fs_t.compute_first_order_greek("vega"), device=device)
     rho_t = torch.tensor(fs_t.compute_first_order_greek("rho"), device=device)
     theta_t = torch.tensor(fs_t.compute_first_order_greek("theta"), device=device)
+    # vanna_t = torch.tensor(fs_t.compute_first_order_greek("vanna"), device=device)
+    # volga_t = torch.tensor(fs_t.compute_first_order_greek("volga"), device=device)
 
     # Calcul du PnL expliqué
     dS = torch.tensor(S_t1 - S_t, device=device)
     dV = torch.tensor(v_t1 - v_t, device=device)
     dr = torch.tensor(r_t1 - r_t, device=device)
     dT = torch.tensor(-params["dt"], device=device)
+
 
     PnL_explained = delta_t * dS + vega_t * dV + rho_t * dr + theta_t * dT
 

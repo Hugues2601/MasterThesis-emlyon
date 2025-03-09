@@ -76,14 +76,13 @@ class HestonModel(ABC):
 
     def compute_first_order_greek(self, greek_name):
         greeks = {
-            "delta" : self.S0,
-            "vega" : self.sigma,
-            "rho" : self.r
+            "delta": self.S0,
+            "vega": self.sigma,
+            "rho": self.r
         }
 
         if greek_name == "theta":
-            greek = self._compute_theta()
-            return greek
+            return self._compute_theta()
 
         elif greek_name in greeks:
             variable = greeks[greek_name]
@@ -92,8 +91,33 @@ class HestonModel(ABC):
 
             price = self.heston_price()
             price.backward()
-            greek = variable.grad.item()
-            return greek
+            return variable.grad.item()
+
+        elif greek_name == "vanna":
+            # Compute Vanna: d(Delta) / d(sigma)
+            if self.sigma.grad is not None:
+                self.sigma.grad.zero_()
+            if self.S0.grad is not None:
+                self.S0.grad.zero_()
+
+            price = self.heston_price()
+            price.backward(create_graph=True)
+
+            delta = self.S0.grad.clone()  # Stocke Delta
+            delta.backward(retain_graph=True)  # Backward pour obtenir Vanna
+            return self.sigma.grad.item()
+
+        elif greek_name == "volga":
+            # Compute Volga: d²P / dσ²
+            if self.sigma.grad is not None:
+                self.sigma.grad.zero_()
+
+            price = self.heston_price()
+            price.backward(create_graph=True)  # Conserve le graphe pour dérivée 2ème ordre
+
+            vega = self.sigma.grad.clone()  # Stocke Vega
+            vega.backward(retain_graph=True)  # Backward pour Volga sans libérer le graphe
+            return self.sigma.grad.item()
 
     def compute_second_order_greek(self, greek_name, plot=False):
         pass

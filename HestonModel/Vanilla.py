@@ -5,8 +5,8 @@ from config import *
 """ ----------------------- Characteristic Function --------------------"""
 
 class VanillaHestonPrice(HestonModel):
-    def __init__(self, S0, K, T, r, kappa, v0, theta, sigma, rho):
-        super().__init__(S0, K, T, r, kappa, v0, theta, sigma, rho)
+    def __init__(self, S0, K, T, r, kappa, v0, theta, sigma, rho, type="call"):
+        super().__init__(S0, K, T, r, kappa, v0, theta, sigma, rho, type)
 
     def _heston_cf(self, phi):
         # Ensure that phi is a torch tensor on the GPU
@@ -38,8 +38,13 @@ class VanillaHestonPrice(HestonModel):
 
     def heston_price(self):
         P1, P2 = self._compute_integrals()
-        price = self.S0 * P1 - self.K * torch.exp(-self.r * self.T) * P2
-        return price
+
+        if self.type=="call":
+            price = self.S0 * P1 - self.K * torch.exp(-self.r * self.T) * P2
+            return price
+        elif self.type=="put":
+            price = self.K * torch.exp(-self.r * self.T) * (1-P2) - self.S0 * (1-P1)
+            return price
 
     def _compute_theta(self):
         if self.T.grad is not None:

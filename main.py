@@ -1,4 +1,5 @@
 from BlackScholes.FSImpliedVol import ImpliedVolCalculatorFS
+from BlackScholes.VanillaImpliedVolSmile import ImpliedVolCalculatorVanilla
 from Calibrator.Calibrator import plot_heston_vs_market
 from imports import *
 import json
@@ -48,6 +49,18 @@ def run(args):
                              sigma=calibrated_params["sigma"],
                              rho=calibrated_params["rho"]).plot_IV_smile()
 
+        #Display de la vol implicite smile pour les Calls Vanille
+        ImpliedVolCalculatorVanilla(S0=S0,
+                                    k_values=[],
+                                    T=1.0,
+                                    r=r,
+                                    kappa=calibrated_params["kappa"],
+                                    v0=calibrated_params["v0"],
+                                    theta=calibrated_params["theta"],
+                                    sigma=calibrated_params["sigma"],
+                                    rho=calibrated_params["rho"]).plot_IV_smile()
+
+
         # Affichage des Grecques
         DisplayGreeks(S0=S0,
                       k=1.0,
@@ -70,7 +83,7 @@ def run(args):
 if __name__ == '__main__':
     input = {
         "action": ["CALIBRATE_HESTON_MODEL"],
-        "ticker": "QQQ",
+        "ticker": "SPY",
         "params_fs" : {"S0": 575.92, "k": 1.0, "t0": 0.0, "T1": 1.0, "T2": 3.0, "r": 0.04316, "kappa": 1.77271, "v0": 0.0222788, "theta": 0.00426840169840379, "sigma": 0.11711648513095249, "rho": -0.616869574660294},
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }

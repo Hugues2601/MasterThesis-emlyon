@@ -3,12 +3,13 @@ from config import CONFIG
 from DataRetriever import get_yfinance_data
 
 class VanillaBlackScholes:
-    def __init__(self, S0, K, T, r, sigma):
+    def __init__(self, S0, K, T, r, sigma, type="call"):
         self.S0 = torch.tensor([S0], device=CONFIG.device, dtype=torch.float64, requires_grad=True)
         self.K = torch.tensor(K, device=CONFIG.device,dtype=torch.float64)
         self.T = torch.tensor(T, device=CONFIG.device,dtype=torch.float64)
         self.r = torch.tensor([r],device=CONFIG.device, dtype=torch.float64)
         self.sigma = sigma
+        self.type = type
 
     def _d1_d2(self):
         d1 = (torch.log(self.S0 / self.K) + (self.r + 0.5 * self.sigma ** 2) * self.T) / (
@@ -18,8 +19,15 @@ class VanillaBlackScholes:
 
     def price(self):
         d1, d2 = self._d1_d2()
-        price = self.S0 * torch.distributions.Normal(0, 1).cdf(d1) - self.K * torch.exp(-self.r * self.T) * torch.distributions.Normal(0, 1).cdf(d2)
-        return price
+        if self.type == "call":
+            price = self.S0 * torch.distributions.Normal(0, 1).cdf(d1) - self.K * torch.exp(-self.r * self.T) * torch.distributions.Normal(0, 1).cdf(d2)
+            return price
+
+        elif self.type == "put":
+            price = self.K * torch.exp(-self.r * self.T) * torch.distributions.Normal(0, 1).cdf(-d2) - self.S0 * torch.distributions.Normal(0, 1).cdf(-d1)
+            return price
+
+
 
 
 """ ------------ CALCULATE YF IV -----------------"""

@@ -96,7 +96,7 @@ def plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_p
         price = model.heston_price().item()
         heston_prices.append(price)
 
-    # Plot the results
+    # Plot overall results
     plt.figure(figsize=(10, 6))
     plt.scatter(strike, lastPrice, color='blue', label='Market Prices')
     plt.scatter(strike, heston_prices, color='red', marker='x', label='Heston Model Prices')
@@ -106,3 +106,23 @@ def plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_p
     plt.legend()
     plt.grid()
     plt.show()
+
+    # Plot results for each maturity separately
+    unique_maturities = sorted(set(timetomaturity))
+
+    for T in unique_maturities:
+        plt.figure(figsize=(10, 6))
+        indices = [i for i, t in enumerate(timetomaturity) if t == T]
+        strikes_T = [strike[i] for i in indices]
+        lastPrices_T = [lastPrice[i] for i in indices]
+        hestonPrices_T = [heston_prices[i] for i in indices]
+
+        plt.scatter(strikes_T, lastPrices_T, color='blue', label='Market Prices')
+        plt.scatter(strikes_T, hestonPrices_T, color='red', marker='x', label='Heston Model Prices')
+        plt.xlabel('Strike Price')
+        plt.ylabel('Option Price')
+        plt.title(f'Market vs Heston Prices (T={T:.2f})')
+        plt.legend()
+        plt.grid()
+        plt.show()
+

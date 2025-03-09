@@ -6,24 +6,9 @@ import requests
 """ --------------- 10Y Treasury Yield --------------"""
 
 def get_treasury_yield() -> float:
-    url = "https://www.alphavantage.co/query"
-    params = {
-        "function": "TREASURY_YIELD",
-        "interval": "monthly",
-        "maturity": "10y",
-        "apikey": "YOUR_API_KEY"  # Remplace par ta clé API Alpha Vantage
-    }
-    response = requests.get(url, params=params)
-
-    if response.status_code != 200:
-        raise ConnectionError(f"API request failed with status code {response.status_code}")
-
-    data = response.json()
-
-    if "data" not in data or not data["data"]:
-        raise ValueError("No valid data found in API response")
-
-    return float(data["data"][0]["value"]) / 100
+    data = yf.download("^TNX", period="1d", interval="1d")
+    treasury_yield = (data["Close"].iloc[0])/100
+    return treasury_yield
 
 
 """ --------------------- Options Data from Yahoo Finance ---------------------"""
@@ -32,8 +17,14 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
     stock = yf.Ticker(symbol)
     spot_price = stock.history(period="1d")['Close'].iloc[-1]
 
+    #riskfree
+    rate = yf.download("^TNX", period="1d", interval="1d")
+    treasury_yield = rate["Close"].iloc[-1].item() / 100
+    print(treasury_yield)
+
     expirations = stock.options
     all_calls = pd.DataFrame()
+
 
     for expiration_date in expirations:
         options_chain = stock.option_chain(expiration_date)
@@ -50,6 +41,7 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
 
         all_calls = pd.concat([all_calls, calls], ignore_index=True)
 
+
     calls_list = all_calls[
         (all_calls["moneyness"] > 0.8) & (all_calls["moneyness"] < 1.2) &
         (all_calls["timetomaturity"] > 0.2) & (all_calls["timetomaturity"] < 4) &
@@ -57,6 +49,8 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
         (all_calls["openInterest"] > 10) &
         (all_calls["impliedVolatility"] < 1) & (all_calls["impliedVolatility"] > 0.05)
     ]
+
+    calls_list["r"] = treasury_yield
 
     columns_to_keep = ["contractSymbol",
                        'lastPrice',
@@ -66,10 +60,9 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
                        'timetomaturity',
                        'expiration',
                        'spot_price',
+                       'r'
                        ]
     calls_list = calls_list[columns_to_keep]
-    calls_list["lastPrice_norm"] = calls_list["lastPrice"] / calls_list["spot_price"]
-    calls_list["strike_norm"] = calls_list["strike"] / calls_list["spot_price"]
     calls_list.reset_index(drop=True, inplace=True)
 
     if to_csv:
@@ -82,8 +75,9 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
     moneyness = calls_list["moneyness"].tolist()
     timetomaturity = calls_list["timetomaturity"].tolist()
     spot_price = calls_list["spot_price"].tolist()
+    risk_free_rate = calls_list["r"].tolist()
 
-    return calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price
+    return calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate
 
 def agg_strikes_and_maturities(symbol:str):
     calls_list, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(symbol)

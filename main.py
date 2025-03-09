@@ -60,7 +60,6 @@ def run(args):
                                     sigma=calibrated_params["sigma"],
                                     rho=calibrated_params["rho"]).plot_IV_smile()
 
-
         # Affichage des Grecques
         DisplayGreeks(S0=S0,
                       k=1.0,

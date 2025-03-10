@@ -47,7 +47,7 @@ def get_yfinance_data(symbol: str, to_csv: bool = False, filter_data: bool = Tru
     if filter_data:
         calls_list = all_calls[
             (all_calls["moneyness"] > 0.8) & (all_calls["moneyness"] < 1.2) &
-            (all_calls["timetomaturity"] > 0.2) & (all_calls["timetomaturity"] < 4) &
+            (all_calls["timetomaturity"] > 0.3) & (all_calls["timetomaturity"] < 4) &
             (all_calls["volume"] > 0) &
             (all_calls["openInterest"] > 10) &
             (all_calls["impliedVolatility"] < 1) & (all_calls["impliedVolatility"] > 0.05)

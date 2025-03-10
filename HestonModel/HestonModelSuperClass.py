@@ -29,8 +29,8 @@ class HestonModel(ABC):
         assert len(self.K) == len(self.T), "K et T doivent avoir la même taille"
 
 
-        umax = 150
-        n = 1000
+        umax = 175
+        n = 1501
         if n % 2 == 0:
             n += 1
 

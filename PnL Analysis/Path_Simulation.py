@@ -56,7 +56,7 @@ params = {
     "T": 1.0,       # Horizon de simulation (1 an)
     "dt": 1/252,    # Pas de temps journalier
     "n_paths": 1,   # Une seule trajectoire pour simplifier
-    "device": "cpu" # Exécution sur CPU pour affichage
+    "device": "cuda" # Exécution sur CPU pour affichage
 }
 
 # Instanciation du simulateur Heston

@@ -12,3 +12,6 @@ import scipy.optimize as optimize
 import yfinance as yf
 import time
 
+stock = yf.Ticker("TSLA")
+spot_price = stock.history(period="1d")['Close'].iloc[-1]
+print(spot_price)

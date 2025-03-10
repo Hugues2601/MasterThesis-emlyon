@@ -13,9 +13,10 @@ def get_treasury_yield() -> float:
 
 """ --------------------- Options Data from Yahoo Finance ---------------------"""
 
-def get_yfinance_data(symbol: str, to_csv: bool = False):
+def get_yfinance_data(symbol: str, to_csv: bool = False, filter_data: bool = True):
     stock = yf.Ticker(symbol)
     spot_price = stock.history(period="1d")['Close'].iloc[-1]
+    print(spot_price)
 
     #riskfree
     rate = yf.download("^TNX", period="1d", interval="1d")
@@ -41,14 +42,20 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
 
         all_calls = pd.concat([all_calls, calls], ignore_index=True)
 
+    print(all_calls)
 
-    calls_list = all_calls[
-        (all_calls["moneyness"] > 0.8) & (all_calls["moneyness"] < 1.2) &
-        (all_calls["timetomaturity"] > 0.2) & (all_calls["timetomaturity"] < 4) &
-        (all_calls["volume"] > 0) &
-        (all_calls["openInterest"] > 10) &
-        (all_calls["impliedVolatility"] < 1) & (all_calls["impliedVolatility"] > 0.05)
-    ]
+    if filter_data:
+        calls_list = all_calls[
+            (all_calls["moneyness"] > 0.8) & (all_calls["moneyness"] < 1.2) &
+            (all_calls["timetomaturity"] > 0.2) & (all_calls["timetomaturity"] < 4) &
+            (all_calls["volume"] > 0) &
+            (all_calls["openInterest"] > 10) &
+            (all_calls["impliedVolatility"] < 1) & (all_calls["impliedVolatility"] > 0.05)
+        ]
+    else:
+        calls_list = all_calls
+
+    print(calls_list)
 
     calls_list["r"] = treasury_yield
 
@@ -64,6 +71,7 @@ def get_yfinance_data(symbol: str, to_csv: bool = False):
                        ]
     calls_list = calls_list[columns_to_keep]
     calls_list.reset_index(drop=True, inplace=True)
+
 
     if to_csv:
         calls_list.to_csv(f"C:\\Users\\hugue\\Desktop\\Master Thesis\\Data\\{datetime.now().strftime('%Y%m%d')}_{symbol}_clean.csv", index=False)

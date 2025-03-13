@@ -57,17 +57,17 @@ class ImpliedVolCalculatorFS:
 
         return torch.exp(theta).detach().cpu().numpy()
 
-    def plot_IV_smile(self, T_values=None, num_strikes=500):
+    def plot_IV_smile(self, T_values=None, num_strikes=100):
         """
         Génère et affiche le graphique de l'IV en fonction des strikes pour différentes maturités.
 
         :param T_values: Liste des maturités T2 à tester
         :param num_strikes: Nombre de strikes à générer (défaut : 500)
         """
-        k_values = np.linspace(0.2, 1.9, num_strikes).tolist()
+        k_values = np.linspace(0.4, 1.6, num_strikes).tolist()
 
         if T_values is None:
-            T_values = [1.4, 1.6, 1.8, 2, 2.5, 3]
+            T_values = [1.4, 1.8, 2.0, 2.5, 3, 4]
 
 
         plt.figure(figsize=(12, 8))
@@ -91,7 +91,7 @@ class ImpliedVolCalculatorFS:
                 rho=self.rho
             ).FSImpliedVol()
 
-            plt.plot(k_values, IV_T, label=f'T2-T1 = {T-self.T1}', linewidth=2)
+            plt.plot(k_values, IV_T, label=f'T2-T1 = {round(T-self.T1, 1)}', linewidth=2)
 
         # Personnalisation du graphique
         plt.xlabel('Strike (k)', fontsize=14)

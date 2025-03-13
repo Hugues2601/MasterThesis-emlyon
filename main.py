@@ -4,6 +4,7 @@ from Calibrator.Calibrator import plot_heston_vs_market
 from imports import *
 import json
 import numpy as np
+import matplotlib.pyplot as plt
 
 def run(args):
     args = json.loads(args)

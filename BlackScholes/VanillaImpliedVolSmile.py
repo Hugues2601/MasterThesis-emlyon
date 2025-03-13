@@ -54,17 +54,17 @@ class ImpliedVolCalculatorVanilla:
 
         return torch.exp(theta).detach().cpu().numpy()
 
-    def plot_IV_smile(self, T_values=None, num_strikes=500):
+    def plot_IV_smile(self, T_values=None, num_strikes=100):
         """
         Génère et affiche le graphique de l'IV en fonction des strikes pour différentes maturités.
 
         :param T_values: Liste des maturités T à tester
         :param num_strikes: Nombre de strikes à générer (défaut : 500)
         """
-        k_values = np.linspace(self.S0 * 0.2, self.S0*1.8, num_strikes).tolist()
+        k_values = np.linspace(self.S0 * 0.4, self.S0*1.6, num_strikes).tolist()
 
         if T_values is None:
-            T_values = [0.5, 1, 1.5, 2, 2.5, 3]
+            T_values = [.4, .8, 1.0, 1.5, 2, 3]
 
         plt.figure(figsize=(12, 8))
         plt.gca().set_facecolor('#e6e6e6')

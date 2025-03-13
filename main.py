@@ -31,11 +31,12 @@ def run(args):
 
     if "CALIBRATE_HESTON_MODEL" in action:
 
+
         # Recuperation et traitement des données sur yf
         print("\n" + "=" * 50)
         print("  📊 RÉCUPÉRATION DES DONNÉES AVEC YAHOO FINANCE")
         print("=" * 50 + "\n")
-        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, to_csv=True, filter_data=False)
+        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, get_csv_name="SPX_DATA_polygon_20250313_CLEANED")
         S0 = spot_price[0]
         r = risk_free_rate[0]
 
@@ -186,7 +187,7 @@ def run(args):
 if __name__ == '__main__':
     input = {
         "action": ["CALIBRATE_HESTON_MODEL"],
-        "ticker": "QQQ",
+        "ticker": "TSLA",
         "params_fs" : {"S0": 575.92, "k": 1.25, "t0": 0.0, "T1": 1.0, "T2": 3.0, "r": 0.04316, "kappa": 0.05, "v0": 0.0222788, "theta": 0.00426840169840379, "sigma": 0.11711648513095249, "rho": -0.616869574660294},
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }

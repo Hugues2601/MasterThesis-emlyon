@@ -1,6 +1,8 @@
 import torch
 from HestonModel.HestonModelSuperClass import HestonModel
 from config import CONFIG
+import matplotlib.pyplot as plt
+import numpy as np
 
 class ForwardStart(HestonModel):
     def __init__(self, S0, k, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
@@ -57,3 +59,48 @@ class ForwardStart(HestonModel):
         price.backward()
         greek = self.T0.grad.item()
         return greek
+
+    def sensitivity_analysis(self, param_name, param_range):
+        """
+        Analyse la sensibilité du prix de l'option Forward Start par rapport à un paramètre donné.
+        :param param_name: Nom du paramètre à faire varier ("kappa", "theta", "v0", "sigma", "rho")
+        :param param_range: Liste ou np.array contenant les valeurs du paramètre à tester.
+        """
+        prices = []
+
+        for value in param_range:
+            setattr(self, param_name, torch.tensor(value, device=CONFIG.device, dtype=torch.float64))
+            price = self.heston_price().item()
+            prices.append(price)
+
+        # Plot
+        plt.figure(figsize=(8, 5))
+        plt.plot(param_range, prices, linestyle='-', label=f"Impact of {param_name} for k={self.k.item()}", color="black")
+        plt.xlabel(param_name)
+        plt.ylabel("Forward Start Option Price")
+        plt.title(f"Sensitivity of Forward Start Option Price to {param_name}")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
+# # Exemple d'utilisation (en gardant les autres paramètres fixes)
+# fs_option = ForwardStart(S0=100.0, k=1.0, T0=0.0, T1=1.0, T2=3.0, r=0.03, kappa=2.0, v0=0.04, theta=0.04, sigma=0.2, rho=-0.5)
+#
+# # Faire varier kappa de 0.05 à 4
+# kappa_range = np.linspace(0.05, 4, 500)
+# fs_option.sensitivity_analysis("kappa", kappa_range)
+#
+# v0_range = np.linspace(0.01, 0.2, 500)
+# fs_option.sensitivity_analysis("v0", v0_range)
+#
+# # Faire varier theta de 0.01 à 0.2
+# theta_range = np.linspace(0.01, 0.2, 500)
+# fs_option.sensitivity_analysis("theta", theta_range)
+#
+# # Faire varier sigma de 0.1 à 1.0
+# sigma_range = np.linspace(0.1, 1.0, 500)
+# fs_option.sensitivity_analysis("sigma", sigma_range)
+#
+# # Faire varier rho de -0.9 à 0.9
+# rho_range = np.linspace(-0.9, 0.9, 500)
+# fs_option.sensitivity_analysis("rho", rho_range)

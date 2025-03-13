@@ -3,6 +3,7 @@ from BlackScholes.VanillaImpliedVolSmile import ImpliedVolCalculatorVanilla
 from Calibrator.Calibrator import plot_heston_vs_market
 from imports import *
 import json
+import numpy as np
 
 def run(args):
     args = json.loads(args)
@@ -29,15 +30,104 @@ def run(args):
         DisplayGreeks(*params_fs).display()
 
     if "CALIBRATE_HESTON_MODEL" in action:
+
         # Recuperation et traitement des données sur yf
+        print("\n" + "=" * 50)
+        print("  📊 RÉCUPÉRATION DES DONNÉES AVEC YAHOO FINANCE")
+        print("=" * 50 + "\n")
         df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, to_csv=True, filter_data=False)
         S0 = spot_price[0]
         r = risk_free_rate[0]
+
         # Calibration de Heston
+        print("\n" + "=" * 50)
+        print("  🔧 CALIBRATION DU MODÈLE HESTON")
+        print("=" * 50 + "\n")
         calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=2000)
+        print("\n📌 Paramètres calibrés :")
+        print(calibrated_params)
+
         # Display graphique des prix du marché vs des prix calculés avec Heston et avec les parametres calibrés
+        print("\n" + "=" * 50)
+        print("  📈 COMPARAISON PRIX DU MARCHÉ VS HESTON")
+        print("=" * 50 + "\n")
         plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params)
-        print(f"Calibrated Parameters: {calibrated_params}")
+
+        print("\n" + "=" * 50)
+        print("  🔄 VARIATIONS DES PARAMÈTRES CALIBRÉS (HESTON)")
+        print("=" * 50 + "\n")
+
+        # Exemple d'utilisation (en gardant les autres paramètres fixes)
+        fs_option = ForwardStart(S0=S0, k=0.75, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
+
+        kappa_range = np.linspace(0.05, 4, 500)
+        fs_option.sensitivity_analysis("kappa", kappa_range)
+
+        v0_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("v0", v0_range)
+
+        # Faire varier theta de 0.01 à 0.2
+        theta_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("theta", theta_range)
+
+        # Faire varier sigma de 0.1 à 1.0
+        sigma_range = np.linspace(0.1, 1.0, 500)
+        fs_option.sensitivity_analysis("sigma", sigma_range)
+
+        # Faire varier rho de -0.9 à 0.9
+        rho_range = np.linspace(-0.9, 0.9, 500)
+        fs_option.sensitivity_analysis("rho", rho_range)
+
+        # Exemple d'utilisation (en gardant les autres paramètres fixes)
+        fs_option = ForwardStart(S0=S0, k=1.0, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
+
+        kappa_range = np.linspace(0.05, 4, 500)
+        fs_option.sensitivity_analysis("kappa", kappa_range)
+
+        v0_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("v0", v0_range)
+
+        # Faire varier theta de 0.01 à 0.2
+        theta_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("theta", theta_range)
+
+        # Faire varier sigma de 0.1 à 1.0
+        sigma_range = np.linspace(0.1, 1.0, 500)
+        fs_option.sensitivity_analysis("sigma", sigma_range)
+
+        # Faire varier rho de -0.9 à 0.9
+        rho_range = np.linspace(-0.9, 0.9, 500)
+        fs_option.sensitivity_analysis("rho", rho_range)
+
+        # Exemple d'utilisation (en gardant les autres paramètres fixes)
+        fs_option = ForwardStart(S0=S0, k=1.25, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
+
+        kappa_range = np.linspace(0.05, 4, 500)
+        fs_option.sensitivity_analysis("kappa", kappa_range)
+
+        v0_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("v0", v0_range)
+
+        # Faire varier theta de 0.01 à 0.2
+        theta_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("theta", theta_range)
+
+        # Faire varier sigma de 0.1 à 1.0
+        sigma_range = np.linspace(0.1, 1.0, 500)
+        fs_option.sensitivity_analysis("sigma", sigma_range)
+
+        # Faire varier rho de -0.9 à 0.9
+        rho_range = np.linspace(-0.9, 0.9, 500)
+        fs_option.sensitivity_analysis("rho", rho_range)
+
+
+
+        print("\n" + "=" * 50)
+        print("  🏦 IMPLICIT VOLATILITY SMILE (CALLS FORWARD START)")
+        print("=" * 50 + "\n")
         # Display du la vol implicite pour les Calls Forward Start
         ImpliedVolCalculatorFS(S0=S0,
                              k_values=[],
@@ -49,6 +139,9 @@ def run(args):
                              sigma=calibrated_params["sigma"],
                              rho=calibrated_params["rho"]).plot_IV_smile()
 
+        print("\n" + "=" * 50)
+        print("  🏦 IMPLICIT VOLATILITY SMILE (CALLS VANILLE)")
+        print("=" * 50 + "\n")
         #Display de la vol implicite smile pour les Calls Vanille
         ImpliedVolCalculatorVanilla(S0=S0,
                                     k_values=[],
@@ -60,6 +153,9 @@ def run(args):
                                     sigma=calibrated_params["sigma"],
                                     rho=calibrated_params["rho"]).plot_IV_smile()
 
+        print("\n" + "=" * 50)
+        print("  ⚖️ CALCUL DES GRECS")
+        print("=" * 50 + "\n")
         # Affichage des Grecques
         DisplayGreeks(S0=S0,
                       k=1.0,
@@ -73,6 +169,14 @@ def run(args):
                       sigma=calibrated_params["sigma"],
                       rho=calibrated_params["rho"]).display()
 
+        print("\n" + "=" * 50)
+        print("  📉 ANALYSE DU PNL INEXPLIQUÉ")
+        print("=" * 50 + "\n")
+
+        # Analyse du PnL unexplained : on génére genre 10 000 chemins avec les parametres calibrés
+        # puis on calcule pnl total entre deux instant de chaque chemin, pnl expliqué avec les grecs
+        # On calcule a chaque fois le pnl inexpliqué et on regarde sa répartition
+
     if "GET_YF_IV" in action:
         df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(ticker)
         vol = implied_vol(strike, timetomaturity, lastPrice)
@@ -82,8 +186,8 @@ def run(args):
 if __name__ == '__main__':
     input = {
         "action": ["CALIBRATE_HESTON_MODEL"],
-        "ticker": "SPY",
-        "params_fs" : {"S0": 575.92, "k": 1.0, "t0": 0.0, "T1": 1.0, "T2": 3.0, "r": 0.04316, "kappa": 4, "v0": 0.0222788, "theta": 0.00426840169840379, "sigma": 0.11711648513095249, "rho": -0.616869574660294},
+        "ticker": "QQQ",
+        "params_fs" : {"S0": 575.92, "k": 1.25, "t0": 0.0, "T1": 1.0, "T2": 3.0, "r": 0.04316, "kappa": 0.05, "v0": 0.0222788, "theta": 0.00426840169840379, "sigma": 0.11711648513095249, "rho": -0.616869574660294},
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }
 

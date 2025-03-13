@@ -53,7 +53,7 @@ def get_yfinance_data(symbol: str, to_csv: bool = False, filter_data: bool = Tru
             (all_calls["impliedVolatility"] < 1) & (all_calls["impliedVolatility"] > 0.05)
         ]
     else:
-        calls_list = all_calls
+        calls_list = all_calls[all_calls["lastPrice"] > 0.01 * all_calls["spot_price"]]
 
     print(calls_list)
 

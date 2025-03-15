@@ -120,9 +120,9 @@ class ForwardStart(HestonModel):
                                            sigma=self.sigma, rho=self.rho)
 
             # Compute first-order Greeks
-            delta = forward_start_t.compute_first_order_greek("delta")
-            vega = forward_start_t.compute_first_order_greek("vega")
-            theta = forward_start_t.compute_first_order_greek("theta")
+            delta = forward_start_t.compute_greek("delta")
+            vega = forward_start_t.compute_greek("vega")
+            theta = forward_start_t.compute_greek("theta")
 
             # Compute changes in state variables
             dS = S_t1 - S_t
@@ -134,35 +134,40 @@ class ForwardStart(HestonModel):
 
         return explained_pnl
 
-    def compute_first_order_greek(self, greek_name):
+    import torch
+
+    import torch
+
+    def compute_greek(self, greek_name, batch=False):
         greeks = {
             "delta": self.S0,
             "vega": self.v0,
             "rho": self.r,
-            "theta": self.T0
+            "theta": self.T0,
+            "gamma": (self.S0, self.S0),  # d²V/dS0²
+            "vanna": (self.S0, self.v0),  # d²V/dS0 dv0
+            "vomma": (self.v0, self.v0),  # d²V/dv0²
         }
 
         variable = greeks[greek_name]
-        if variable.grad is not None:
-            variable.grad.zero_()
-
         price = self.heston_price()
-        price.backward()
-        return variable.grad.item()
 
-    def compute_second_order_greek(self, greek_name):
-        greeks = {"delta": self.S0, "vega": self.v0}
-        var1 = greeks[greek_name]
-        var2 = self.v0
+        if batch:
+            price = price.sum()  # Ensure a scalar output for batch mode
 
-        if var1.grad is not None: var1.grad.zero_()
-        price = self.heston_price()
-        price.backward(create_graph=True)
+        if isinstance(variable, tuple):  # Second-order Greeks (Gamma, Vanna, Vomma)
+            var1, var2 = variable
+            first_derivative, = torch.autograd.grad(price, var1, create_graph=True)
 
-        if var2.grad is not None: var2.grad.zero_()
-        var1.grad.backward()
+            if var1 == var2:  # Special case for Gamma (d²V/dS0²)
+                second_derivative, = torch.autograd.grad(first_derivative, var2, create_graph=True)
+            else:  # Normal case (Vanna, Vomma)
+                second_derivative, = torch.autograd.grad(first_derivative.sum() if batch else first_derivative, var2)
 
-        return var2.grad.item()
+            return second_derivative if batch else second_derivative.item()
+        else:  # First-order Greeks (Delta, Vega, Rho, Theta)
+            first_derivative, = torch.autograd.grad(price, variable)
+            return first_derivative if batch else first_derivative.item()
 
     def sensitivity_analysis(self, param_name, param_range):
         """

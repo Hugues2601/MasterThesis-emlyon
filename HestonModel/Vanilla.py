@@ -46,7 +46,7 @@ class VanillaHestonPrice(HestonModel):
             price = self.K * torch.exp(-self.r * self.T) * (1-P2) - self.S0 * (1-P1)
             return price
 
-    def compute_first_order_greek(self, greek_name):
+    def compute_greek(self, greek_name):
         greeks = {
             "delta": self.S0,
             "vega": self.sigma,

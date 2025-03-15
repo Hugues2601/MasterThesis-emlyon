@@ -71,7 +71,7 @@ class HestonModel(ABC):
         pass
 
     @abstractmethod
-    def compute_first_order_greek(self, greek_name):
+    def compute_greek(self, greek_name):
         pass
 
     def _ensure_1d_tensor(self, tensor):

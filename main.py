@@ -24,7 +24,7 @@ def run(args):
 
     if "GET_SINGLE_FS_GREEK" in action:
         FS = ForwardStart(*params_fs)
-        delta = FS.compute_first_order_greek("vega")
+        delta = FS.compute_greek("vega")
         print(f"value {delta}")
 
     if "DISPLAY_FS_GREEKS" in action:

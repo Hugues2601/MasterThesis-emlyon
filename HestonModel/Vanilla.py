@@ -46,11 +46,18 @@ class VanillaHestonPrice(HestonModel):
             price = self.K * torch.exp(-self.r * self.T) * (1-P2) - self.S0 * (1-P1)
             return price
 
-    def _compute_theta(self):
-        if self.T.grad is not None:
-            self.T.grad.zero_()
+    def compute_first_order_greek(self, greek_name):
+        greeks = {
+            "delta": self.S0,
+            "vega": self.sigma,
+            "rho": self.r,
+            "theta": self.T
+        }
+
+        variable = greeks[greek_name]
+        if variable.grad is not None:
+            variable.grad.zero_()
 
         price = self.heston_price()
         price.backward()
-        greek = self.T.grad.item()
-        return greek
+        return variable.grad.item()

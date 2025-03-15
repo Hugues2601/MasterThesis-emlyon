@@ -88,14 +88,67 @@ class ForwardStart(HestonModel):
 
         return prices_t, prices_t1, pnl_total
 
-    def _compute_theta(self):
-        if self.T0.grad is not None:
-            self.T0.grad.zero_()
+    def compute_explained_pnl(self, S_paths, v_paths, t):
+        """
+        Compute the explained PnL for each simulated path, considering the contributions of Delta, Vega, and Theta.
+
+        Args:
+        - S_paths (torch.Tensor): Simulated asset price paths (n_paths, n_steps).
+        - v_paths (torch.Tensor): Simulated variance paths (n_paths, n_steps).
+        - t (int): Time index t for which we compute the explained PnL.
+
+        Returns:
+        - explained_pnl (torch.Tensor): Tensor containing the explained PnL for each path.
+        """
+        n_paths = S_paths.shape[0]
+        explained_pnl = torch.zeros(n_paths, device=CONFIG.device)
+
+        j=0
+        for i in range(n_paths):
+            print(j)
+            j+=1
+            # Get current and next step values
+            S_t = S_paths[i, t].to(CONFIG.device)
+            v_t = v_paths[i, t].to(CONFIG.device)
+            S_t1 = S_paths[i, t + 1].to(CONFIG.device)
+            v_t1 = v_paths[i, t + 1].to(CONFIG.device)
+            dt = self.T2 - self.T1  # Time step (assuming uniform steps)
+
+            # Create individual ForwardStart instances for each path
+            forward_start_t = ForwardStart(S0=S_t, k=self.k, T0=self.T0, T1=self.T1, T2=self.T2,
+                                           r=self.r, kappa=self.kappa, v0=v_t, theta=self.theta,
+                                           sigma=self.sigma, rho=self.rho)
+
+            # Compute first-order Greeks
+            delta = forward_start_t.compute_first_order_greek("delta")
+            vega = forward_start_t.compute_first_order_greek("vega")
+            theta = forward_start_t.compute_first_order_greek("theta")
+
+            # Compute changes in state variables
+            dS = S_t1 - S_t
+            dV = v_t1 - v_t
+            dTheta = -dt  # Time elapsed (negative because Theta is negative PnL component)
+
+            # Compute explained PnL
+            explained_pnl[i] = delta * dS + vega * dV + theta * dTheta
+
+        return explained_pnl
+
+    def compute_first_order_greek(self, greek_name):
+        greeks = {
+            "delta": self.S0,
+            "vega": self.sigma,
+            "rho": self.r,
+            "theta": self.T0
+        }
+
+        variable = greeks[greek_name]
+        if variable.grad is not None:
+            variable.grad.zero_()
 
         price = self.heston_price()
         price.backward()
-        greek = self.T0.grad.item()
-        return greek
+        return variable.grad.item()
 
     def sensitivity_analysis(self, param_name, param_range):
         """

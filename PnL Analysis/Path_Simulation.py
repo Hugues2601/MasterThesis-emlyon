@@ -109,6 +109,8 @@ print(len(prices_t))
 print("Prix à t+1 :", prices_t1[:5])
 print("PnL total :", pnl_tot)
 
+explained_pnl = forward_start.compute_explained_pnl(S_paths, v_paths, t=100)
+print(explained_pnl)
 
 
 # # Paramètres de simulation

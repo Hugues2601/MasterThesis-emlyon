@@ -5,6 +5,7 @@ from imports import *
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+from PnL_Analysis.Path_Simulation import pnl_analysis
 
 def run(args):
     args = json.loads(args)
@@ -24,7 +25,7 @@ def run(args):
 
     if "GET_SINGLE_FS_GREEK" in action:
         FS = ForwardStart(*params_fs)
-        delta = FS.compute_greek("vega")
+        delta = FS.compute_greek("theta")
         print(f"value {delta}")
 
     if "DISPLAY_FS_GREEKS" in action:
@@ -36,7 +37,7 @@ def run(args):
         print("\n" + "=" * 50)
         print("  📊 RÉCUPÉRATION DES DONNÉES AVEC YAHOO FINANCE")
         print("=" * 50 + "\n")
-        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, get_csv_name="SPX_DATA_polygon_20250313_CLEANED")
+        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker)
         S0 = spot_price[0]
         r = risk_free_rate[0]
 
@@ -97,9 +98,9 @@ def run(args):
         # Affichage des Grecques
         DisplayGreeks(S0=S0,
                       k=1.0,
-                      T0=0.0,
+                      T0=0.25,
                       T1=1.0,
-                      T2=3.0,
+                      T2=2.0,
                       r=r,
                       kappa=calibrated_params["kappa"],
                       v0=calibrated_params["v0"],
@@ -111,9 +112,22 @@ def run(args):
         print("  📉 ANALYSE DU PNL INEXPLIQUÉ")
         print("=" * 50 + "\n")
 
+        pnl_analysis(S0=S0,
+                    k=1.0,
+                    T0=0.25,
+                    T1=1.0,
+                    T2=2.0,
+                    r=r,
+                    kappa=calibrated_params["kappa"],
+                    v0=calibrated_params["v0"],
+                    theta=calibrated_params["theta"],
+                    sigma=calibrated_params["sigma"],
+                     rho=calibrated_params["rho"])
+
         # Analyse du PnL unexplained : on génére genre 10 000 chemins avec les parametres calibrés
         # puis on calcule pnl total entre deux instant de chaque chemin, pnl expliqué avec les grecs
         # On calcule a chaque fois le pnl inexpliqué et on regarde sa répartition
+
 
     if "GET_YF_IV" in action:
         df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(ticker)
@@ -124,8 +138,8 @@ def run(args):
 if __name__ == '__main__':
     input = {
         "action": ["CALIBRATE_HESTON_MODEL"],
-        "ticker": "TSLA",
-        "params_fs" : {"S0": 575.92, "k": 1.25, "t0": 0.0, "T1": 1.0, "T2": 3.0, "r": 0.04316, "kappa": 0.05, "v0": 0.0222788, "theta": 0.00426840169840379, "sigma": 0.11711648513095249, "rho": -0.616869574660294},
+        "ticker": "AMZN",
+        "params_fs" : {"S0": 5712.1011, "k": 1.0, "t0": 0.25, "T1": 1.0, "T2": 2.0, "r": 0.05, "kappa": 0.77576, "v0": 0.007, "theta": 0.03395, "sigma": 0.68546, "rho": -0.864341},
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }
 

@@ -77,9 +77,10 @@ class ForwardStart(HestonModel):
                                        r=self.r, kappa=self.kappa, v0=v_t, theta=self.theta,
                                        sigma=self.sigma, rho=self.rho)
 
-        forward_start_t1 = ForwardStart(S0=S_t1, k=self.k, T0=self.T0, T1=self.T1, T2=self.T2,
+        forward_start_t1 = ForwardStart(S0=S_t1, k=self.k, T0=self.T0 - 1/252, T1=self.T1 - 1/252, T2=self.T2 - 1/252,
                                         r=self.r, kappa=self.kappa, v0=v_t1, theta=self.theta,
                                         sigma=self.sigma, rho=self.rho)
+
 
         # Calculer les prix Heston en batch
         prices_t = forward_start_t.heston_price()
@@ -88,55 +89,63 @@ class ForwardStart(HestonModel):
 
         return prices_t, prices_t1, pnl_total
 
-    def compute_explained_pnl(self, S_paths, v_paths, t):
+    def compute_explained_pnl(self, S_paths, v_paths, t, dt, dt_path):
         """
-        Compute the explained PnL for each simulated path, considering the contributions of Delta, Vega, and Theta.
+        Calcule le PnL expliqué à l'instant t en batch pour chaque chemin.
 
         Args:
-        - S_paths (torch.Tensor): Simulated asset price paths (n_paths, n_steps).
-        - v_paths (torch.Tensor): Simulated variance paths (n_paths, n_steps).
-        - t (int): Time index t for which we compute the explained PnL.
+        - S_paths (torch.Tensor): Matrice des prix simulés (n_paths, n_steps).
+        - v_paths (torch.Tensor): Matrice des variances simulées (n_paths, n_steps).
+        - t (int): Indice temporel pour lequel calculer le PnL expliqué.
+        - dt (float): Pas de temps écoulé entre t et t+1.
 
         Returns:
-        - explained_pnl (torch.Tensor): Tensor containing the explained PnL for each path.
+        - explained_pnl (torch.Tensor): Tensor du PnL expliqué pour chaque chemin.
         """
-        n_paths = S_paths.shape[0]
-        explained_pnl = torch.zeros(n_paths, device=CONFIG.device)
+        # Déplacer les données sur GPU
+        S_t = S_paths[:, t].to(CONFIG.device)
+        S_t1 = S_paths[:, t + 1].to(CONFIG.device)
+        v_t = v_paths[:, t].to(CONFIG.device)
+        v_t1 = v_paths[:, t + 1].to(CONFIG.device)
+        dt_t = dt_path[:, t].to(CONFIG.device)
+        T0_t = self.T0.expand_as(S_t).to(CONFIG.device)
 
-        j=0
-        for i in range(n_paths):
-            print(j)
-            j+=1
-            # Get current and next step values
-            S_t = S_paths[i, t].to(CONFIG.device)
-            v_t = v_paths[i, t].to(CONFIG.device)
-            S_t1 = S_paths[i, t + 1].to(CONFIG.device)
-            v_t1 = v_paths[i, t + 1].to(CONFIG.device)
-            dt = self.T2 - self.T1  # Time step (assuming uniform steps)
+        print("T0_t: ", T0_t)
+        print("S_t: ", S_t, "longueur:", len(S_t))
+        print("S_t1: ", S_t1)
+        print("v_t: ", v_t)
 
-            # Create individual ForwardStart instances for each path
-            forward_start_t = ForwardStart(S0=S_t, k=self.k, T0=self.T0, T1=self.T1, T2=self.T2,
-                                           r=self.r, kappa=self.kappa, v0=v_t, theta=self.theta,
-                                           sigma=self.sigma, rho=self.rho)
+        # Création d'instances batch ForwardStart pour calculer les prix et grecs
+        forward_start_t = ForwardStart(S0=S_t, k=self.k, T0=T0_t, T1=self.T1, T2=self.T2,
+                                       r=self.r, kappa=self.kappa, v0=v_t, theta=self.theta,
+                                       sigma=self.sigma, rho=self.rho)
 
-            # Compute first-order Greeks
-            delta = forward_start_t.compute_greek("delta")
-            vega = forward_start_t.compute_greek("vega")
-            theta = forward_start_t.compute_greek("theta")
+        # Calculer le prix de l'option à t
+        price_t = forward_start_t.heston_price()
 
-            # Compute changes in state variables
-            dS = S_t1 - S_t
-            dV = v_t1 - v_t
-            dTheta = -dt  # Time elapsed (negative because Theta is negative PnL component)
+        # Calcul des Grecs
+        delta = forward_start_t.compute_greek("delta", batch=True)
+        vega = forward_start_t.compute_greek("vega", batch=True)
+        vanna = forward_start_t.compute_greek("vanna", batch=True)
+        vomma = forward_start_t.compute_greek("vomma", batch=True)
+        theta = forward_start_t.compute_greek("theta", batch=True)
 
-            # Compute explained PnL
-            explained_pnl[i] = delta * dS + vega * dV + theta * dTheta
+        print("THETA:", theta[:5])
+        # Calcul des variations des variables
+        dS = S_t1 - S_t
+        dv = v_t1 - v_t
+        dT = 1/252
+
+        # Debugging : Vérifier les valeurs intermédiaires
+        print("Delta:", delta[:5])
+        print("Vega:", vega[:5])
+        print("dS:", dS[:5])
+        print("dv:", dv[:5])
+
+        # Calcul du PnL expliqué (sans dTheta ni dRho car r est constant)
+        explained_pnl = delta * dS + vega * dv + theta * dT + 0.5 * vanna * dS * dv + 0.5 * vomma * dv**2
 
         return explained_pnl
-
-    import torch
-
-    import torch
 
     def compute_greek(self, greek_name, batch=False):
         greeks = {
@@ -159,10 +168,8 @@ class ForwardStart(HestonModel):
             var1, var2 = variable
             first_derivative, = torch.autograd.grad(price, var1, create_graph=True)
 
-            if var1 == var2:  # Special case for Gamma (d²V/dS0²)
-                second_derivative, = torch.autograd.grad(first_derivative, var2, create_graph=True)
-            else:  # Normal case (Vanna, Vomma)
-                second_derivative, = torch.autograd.grad(first_derivative.sum() if batch else first_derivative, var2)
+
+            second_derivative, = torch.autograd.grad(first_derivative.sum() if batch else first_derivative, var2)
 
             return second_derivative if batch else second_derivative.item()
         else:  # First-order Greeks (Delta, Vega, Rho, Theta)

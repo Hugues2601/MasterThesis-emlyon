@@ -35,6 +35,7 @@ class HestonSimulator:
         """
         S = torch.zeros(n_paths, self.n_steps, device=self.device)
         v = torch.zeros(n_paths, self.n_steps, device=self.device)
+        dt_path = torch.full((n_paths, self.n_steps), self.dt, device=self.device)
         S[:, 0] = self.S0
         v[:, 0] = self.v0
 
@@ -56,7 +57,9 @@ class HestonSimulator:
                 torch.sqrt(torch.maximum(v[:, t - 1], torch.tensor(0.0, device=self.device))) * dW_S[:, t - 1]
             )
 
-        return S, v  # Returns tensors directly
+
+
+        return S, v, dt_path  # Returns tensors directly
 
     def plot_paths(self, S, v, num_paths=10):
         """
@@ -91,26 +94,72 @@ class HestonSimulator:
         plt.show()
 
 
-# Simuler les chemins Heston
-simulator = HestonSimulator(S0=100.0, r=0.05, kappa=2.0, theta=0.04, sigma=0.3, rho=-0.7, v0=0.04, T=1, dt=1/252)
-S_paths, v_paths = simulator.simulate(n_paths=20000)
+def pnl_analysis(S0, k, r, kappa, v0, theta, sigma, rho, T0, T1, T2):
+    simulator = HestonSimulator(S0=S0, r=r, kappa=kappa, theta=theta, sigma=sigma, rho=rho, v0=v0, T=4.0, dt=1/252)
+    S_paths, v_paths, dt_path = simulator.simulate(n_paths=15000)
 
-# Instancier ForwardStart
-forward_start = ForwardStart(S0=100.0, k=1.1, T0=0.25, T1=0.5, T2=1,
-                             r=0.05, kappa=2.0, v0=0.04, theta=0.04,
-                             sigma=0.3, rho=-0.7)
+    forward_start = ForwardStart(S0=S0, k=k, T0=T0, T1=T1, T2=T2,
+                                 r=r, kappa=kappa, v0=v0, theta=theta,
+                                 sigma=sigma, rho=rho)
 
-# Calcul des prix à t=100 et t+1=101
-prices_t, prices_t1, pnl_tot = forward_start.compute_heston_prices(S_paths, v_paths, t=100)
+    # Calcul des prix à t=100 et t+1=101
+    prices_t, prices_t1, pnl_tot = forward_start.compute_heston_prices(S_paths, v_paths, t=100)
 
-# Afficher les 5 premiers résultats
-print("Prix à t :", prices_t[:5])
-print(len(prices_t))
-print("Prix à t+1 :", prices_t1[:5])
-print("PnL total :", pnl_tot)
 
-explained_pnl = forward_start.compute_explained_pnl(S_paths, v_paths, t=100)
-print(explained_pnl)
+    print("PnL total :", pnl_tot)
+
+    explained_pnl = forward_start.compute_explained_pnl(S_paths, v_paths, t=100, dt=1/252, dt_path=dt_path)
+    print("PnL expliqué: ", explained_pnl)
+
+    pnl_inex = pnl_tot - explained_pnl
+
+    import torch
+    import numpy as np
+    import scipy.stats as stats
+
+    # Convertir en NumPy
+    pnl_inex_np = pnl_inex.detach().cpu().numpy()
+    pn_tot_np = pnl_tot.detach().cpu().numpy()
+    print("Ratio PnL inexpliqué / PnL total :", pnl_inex_np.mean() / pn_tot_np.mean())
+    print(pnl_inex_np)
+
+    # Statistiques descriptives
+    mean = pnl_inex_np.mean()
+    std_dev = pnl_inex_np.std()
+    skewness = stats.skew(pnl_inex_np)
+    kurtosis = stats.kurtosis(pnl_inex_np)
+
+    print(f"Mean: {mean:.4f}, Std Dev: {std_dev:.4f}")
+    print(f"Skewness: {skewness:.4f}, Kurtosis: {kurtosis:.4f}")
+
+    # Tracé de l'histogramme et de la densité estimée
+    plt.figure(figsize=(8, 5))
+    plt.hist(pnl_inex_np, bins=30, density=True, alpha=0.6, color='b', label="Histogram")
+    xmin, xmax = plt.xlim()
+    x = np.linspace(xmin, xmax, 100)
+    p = stats.norm.pdf(x, mean, std_dev)
+    plt.plot(x, p, 'k', linewidth=2, label="Normal Fit")
+    plt.title("Histogram and Normal Fit")
+    plt.legend()
+    plt.show()
+
+    # Test de normalité de Shapiro-Wilk
+    shapiro_test = stats.shapiro(pnl_inex_np)
+    print(f"Shapiro-Wilk Test: Statistic={shapiro_test.statistic:.4f}, p-value={shapiro_test.pvalue:.4f}")
+
+    # Test d'Anderson-Darling
+    anderson_test = stats.anderson(pnl_inex_np, dist='norm')
+    print(f"Anderson-Darling Test: Statistic={anderson_test.statistic:.4f}, Critical Values={anderson_test.critical_values}, Significance Levels={anderson_test.significance_level}")
+
+    # Test de Kolmogorov-Smirnov
+    ks_test = stats.kstest(pnl_inex_np, 'norm', args=(mean, std_dev))
+    print(f"Kolmogorov-Smirnov Test: Statistic={ks_test.statistic:.4f}, p-value={ks_test.pvalue:.4f}")
+
+    # Q-Q Plot pour visualiser la normalité
+    plt.figure(figsize=(6, 6))
+    stats.probplot(pnl_inex_np, dist="norm", plot=plt)
+    plt.title("Q-Q Plot")
+    plt.show()
 
 
 # # Paramètres de simulation

@@ -32,7 +32,6 @@ def run(args):
 
     if "CALIBRATE_HESTON_MODEL" in action:
 
-
         # Recuperation et traitement des données sur yf
         print("\n" + "=" * 50)
         print("  📊 RÉCUPÉRATION DES DONNÉES AVEC YAHOO FINANCE")
@@ -62,70 +61,7 @@ def run(args):
         # Exemple d'utilisation (en gardant les autres paramètres fixes)
         fs_option = ForwardStart(S0=S0, k=0.75, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
                                  sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
-
-        kappa_range = np.linspace(0.05, 4, 500)
-        fs_option.sensitivity_analysis("kappa", kappa_range)
-
-        v0_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("v0", v0_range)
-
-        # Faire varier theta de 0.01 à 0.2
-        theta_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("theta", theta_range)
-
-        # Faire varier sigma de 0.1 à 1.0
-        sigma_range = np.linspace(0.1, 1.0, 500)
-        fs_option.sensitivity_analysis("sigma", sigma_range)
-
-        # Faire varier rho de -0.9 à 0.9
-        rho_range = np.linspace(-0.9, 0.9, 500)
-        fs_option.sensitivity_analysis("rho", rho_range)
-
-        # Exemple d'utilisation (en gardant les autres paramètres fixes)
-        fs_option = ForwardStart(S0=S0, k=1.0, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
-                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
-
-        kappa_range = np.linspace(0.05, 4, 500)
-        fs_option.sensitivity_analysis("kappa", kappa_range)
-
-        v0_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("v0", v0_range)
-
-        # Faire varier theta de 0.01 à 0.2
-        theta_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("theta", theta_range)
-
-        # Faire varier sigma de 0.1 à 1.0
-        sigma_range = np.linspace(0.1, 1.0, 500)
-        fs_option.sensitivity_analysis("sigma", sigma_range)
-
-        # Faire varier rho de -0.9 à 0.9
-        rho_range = np.linspace(-0.9, 0.9, 500)
-        fs_option.sensitivity_analysis("rho", rho_range)
-
-        # Exemple d'utilisation (en gardant les autres paramètres fixes)
-        fs_option = ForwardStart(S0=S0, k=1.25, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
-                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
-
-        kappa_range = np.linspace(0.05, 4, 500)
-        fs_option.sensitivity_analysis("kappa", kappa_range)
-
-        v0_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("v0", v0_range)
-
-        # Faire varier theta de 0.01 à 0.2
-        theta_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("theta", theta_range)
-
-        # Faire varier sigma de 0.1 à 1.0
-        sigma_range = np.linspace(0.1, 1.0, 500)
-        fs_option.sensitivity_analysis("sigma", sigma_range)
-
-        # Faire varier rho de -0.9 à 0.9
-        rho_range = np.linspace(-0.9, 0.9, 500)
-        fs_option.sensitivity_analysis("rho", rho_range)
-
-
+        fs_option.sensitivity_analysis_all(S0, r, calibrated_params)
 
         print("\n" + "=" * 50)
         print("  🏦 IMPLICIT VOLATILITY SMILE (CALLS FORWARD START)")

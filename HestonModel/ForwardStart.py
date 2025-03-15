@@ -51,6 +51,43 @@ class ForwardStart(HestonModel):
         price = self.S0 * (P1 - self.k * torch.exp(-self.r * (self.T2 - self.T1)) * P2)
         return price
 
+    def compute_heston_prices(self, S_paths, v_paths, t):
+        """
+        Version vectorisée de la simulation des prix Heston pour tous les chemins en parallèle sur GPU.
+
+        Args:
+        - S_paths (torch.Tensor): Matrice des prix simulés de taille (n_paths, n_steps).
+        - v_paths (torch.Tensor): Matrice des variances simulées de taille (n_paths, n_steps).
+        - t (int): Indice temporel t pour lequel calculer les prix.
+
+        Returns:
+        - prices_t (torch.Tensor): Tensor des prix Heston au temps t.
+        - prices_t1 (torch.Tensor): Tensor des prix Heston au temps t+1.
+        """
+        n_paths = S_paths.shape[0]
+
+        # Déplacer les données sur GPU pour accélérer le calcul
+        S_t = S_paths[:, t].to(CONFIG.device)
+        v_t = v_paths[:, t].to(CONFIG.device)
+        S_t1 = S_paths[:, t + 1].to(CONFIG.device)
+        v_t1 = v_paths[:, t + 1].to(CONFIG.device)
+
+        # Recréer un objet ForwardStart mais avec batch S_t et v_t
+        forward_start_t = ForwardStart(S0=S_t, k=self.k, T0=self.T0, T1=self.T1, T2=self.T2,
+                                       r=self.r, kappa=self.kappa, v0=v_t, theta=self.theta,
+                                       sigma=self.sigma, rho=self.rho)
+
+        forward_start_t1 = ForwardStart(S0=S_t1, k=self.k, T0=self.T0, T1=self.T1, T2=self.T2,
+                                        r=self.r, kappa=self.kappa, v0=v_t1, theta=self.theta,
+                                        sigma=self.sigma, rho=self.rho)
+
+        # Calculer les prix Heston en batch
+        prices_t = forward_start_t.heston_price()
+        prices_t1 = forward_start_t1.heston_price()
+        pnl_total = prices_t1 - prices_t  # PnL = prix_t+1 - prix_t
+
+        return prices_t, prices_t1, pnl_total
+
     def _compute_theta(self):
         if self.T0.grad is not None:
             self.T0.grad.zero_()
@@ -83,24 +120,68 @@ class ForwardStart(HestonModel):
         plt.grid()
         plt.show()
 
-# # Exemple d'utilisation (en gardant les autres paramètres fixes)
-# fs_option = ForwardStart(S0=100.0, k=1.0, T0=0.0, T1=1.0, T2=3.0, r=0.03, kappa=2.0, v0=0.04, theta=0.04, sigma=0.2, rho=-0.5)
-#
-# # Faire varier kappa de 0.05 à 4
-# kappa_range = np.linspace(0.05, 4, 500)
-# fs_option.sensitivity_analysis("kappa", kappa_range)
-#
-# v0_range = np.linspace(0.01, 0.2, 500)
-# fs_option.sensitivity_analysis("v0", v0_range)
-#
-# # Faire varier theta de 0.01 à 0.2
-# theta_range = np.linspace(0.01, 0.2, 500)
-# fs_option.sensitivity_analysis("theta", theta_range)
-#
-# # Faire varier sigma de 0.1 à 1.0
-# sigma_range = np.linspace(0.1, 1.0, 500)
-# fs_option.sensitivity_analysis("sigma", sigma_range)
-#
-# # Faire varier rho de -0.9 à 0.9
-# rho_range = np.linspace(-0.9, 0.9, 500)
-# fs_option.sensitivity_analysis("rho", rho_range)
+    def sensitivity_analysis_all(self, S0, r, calibrated_params):
+        fs_option = ForwardStart(S0=S0, k=0.75, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
+
+        kappa_range = np.linspace(0.05, 4, 500)
+        fs_option.sensitivity_analysis("kappa", kappa_range)
+
+        v0_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("v0", v0_range)
+
+        # Faire varier theta de 0.01 à 0.2
+        theta_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("theta", theta_range)
+
+        # Faire varier sigma de 0.1 à 1.0
+        sigma_range = np.linspace(0.1, 1.0, 500)
+        fs_option.sensitivity_analysis("sigma", sigma_range)
+
+        # Faire varier rho de -0.9 à 0.9
+        rho_range = np.linspace(-0.9, 0.9, 500)
+        fs_option.sensitivity_analysis("rho", rho_range)
+
+        # Exemple d'utilisation (en gardant les autres paramètres fixes)
+        fs_option = ForwardStart(S0=S0, k=1.0, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
+
+        kappa_range = np.linspace(0.05, 4, 500)
+        fs_option.sensitivity_analysis("kappa", kappa_range)
+
+        v0_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("v0", v0_range)
+
+        # Faire varier theta de 0.01 à 0.2
+        theta_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("theta", theta_range)
+
+        # Faire varier sigma de 0.1 à 1.0
+        sigma_range = np.linspace(0.1, 1.0, 500)
+        fs_option.sensitivity_analysis("sigma", sigma_range)
+
+        # Faire varier rho de -0.9 à 0.9
+        rho_range = np.linspace(-0.9, 0.9, 500)
+        fs_option.sensitivity_analysis("rho", rho_range)
+
+        # Exemple d'utilisation (en gardant les autres paramètres fixes)
+        fs_option = ForwardStart(S0=S0, k=1.25, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
+
+        kappa_range = np.linspace(0.05, 4, 500)
+        fs_option.sensitivity_analysis("kappa", kappa_range)
+
+        v0_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("v0", v0_range)
+
+        # Faire varier theta de 0.01 à 0.2
+        theta_range = np.linspace(0.01, 0.2, 500)
+        fs_option.sensitivity_analysis("theta", theta_range)
+
+        # Faire varier sigma de 0.1 à 1.0
+        sigma_range = np.linspace(0.1, 1.0, 500)
+        fs_option.sensitivity_analysis("sigma", sigma_range)
+
+        # Faire varier rho de -0.9 à 0.9
+        rho_range = np.linspace(-0.9, 0.9, 500)
+        fs_option.sensitivity_analysis("rho", rho_range)

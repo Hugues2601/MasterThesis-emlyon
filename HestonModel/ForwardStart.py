@@ -137,7 +137,7 @@ class ForwardStart(HestonModel):
     def compute_first_order_greek(self, greek_name):
         greeks = {
             "delta": self.S0,
-            "vega": self.sigma,
+            "vega": self.v0,
             "rho": self.r,
             "theta": self.T0
         }
@@ -149,6 +149,20 @@ class ForwardStart(HestonModel):
         price = self.heston_price()
         price.backward()
         return variable.grad.item()
+
+    def compute_second_order_greek(self, greek_name):
+        greeks = {"delta": self.S0, "vega": self.v0}
+        var1 = greeks[greek_name]
+        var2 = self.v0
+
+        if var1.grad is not None: var1.grad.zero_()
+        price = self.heston_price()
+        price.backward(create_graph=True)
+
+        if var2.grad is not None: var2.grad.zero_()
+        var1.grad.backward()
+
+        return var2.grad.item()
 
     def sensitivity_analysis(self, param_name, param_range):
         """

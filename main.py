@@ -54,42 +54,42 @@ def run(args):
         print("=" * 50 + "\n")
         plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params)
 
-        print("\n" + "=" * 50)
-        print("  🔄 VARIATIONS DES PARAMÈTRES CALIBRÉS (HESTON)")
-        print("=" * 50 + "\n")
-
-        # Exemple d'utilisation (en gardant les autres paramètres fixes)
-        fs_option = ForwardStart(S0=S0, k=0.75, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
-                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
-        fs_option.sensitivity_analysis_all(S0, r, calibrated_params)
-
-        print("\n" + "=" * 50)
-        print("  🏦 IMPLICIT VOLATILITY SMILE (CALLS FORWARD START)")
-        print("=" * 50 + "\n")
-        # Display du la vol implicite pour les Calls Forward Start
-        ImpliedVolCalculatorFS(S0=S0,
-                             k_values=[],
-                             T0=0.0, T1=1.0,
-                             T2=[], r=r,
-                             kappa=calibrated_params["kappa"],
-                             v0=calibrated_params["v0"],
-                             theta=calibrated_params["theta"],
-                             sigma=calibrated_params["sigma"],
-                             rho=calibrated_params["rho"]).plot_IV_smile()
-
-        print("\n" + "=" * 50)
-        print("  🏦 IMPLICIT VOLATILITY SMILE (CALLS VANILLE)")
-        print("=" * 50 + "\n")
-        #Display de la vol implicite smile pour les Calls Vanille
-        ImpliedVolCalculatorVanilla(S0=S0,
-                                    k_values=[],
-                                    T=1.0,
-                                    r=r,
-                                    kappa=calibrated_params["kappa"],
-                                    v0=calibrated_params["v0"],
-                                    theta=calibrated_params["theta"],
-                                    sigma=calibrated_params["sigma"],
-                                    rho=calibrated_params["rho"]).plot_IV_smile()
+        # print("\n" + "=" * 50)
+        # print("  🔄 VARIATIONS DES PARAMÈTRES CALIBRÉS (HESTON)")
+        # print("=" * 50 + "\n")
+        #
+        # # Exemple d'utilisation (en gardant les autres paramètres fixes)
+        # fs_option = ForwardStart(S0=S0, k=0.75, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+        #                          sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
+        # fs_option.sensitivity_analysis_all(S0, r, calibrated_params)
+        #
+        # print("\n" + "=" * 50)
+        # print("  🏦 IMPLICIT VOLATILITY SMILE (CALLS FORWARD START)")
+        # print("=" * 50 + "\n")
+        # # Display du la vol implicite pour les Calls Forward Start
+        # ImpliedVolCalculatorFS(S0=S0,
+        #                      k_values=[],
+        #                      T0=0.0, T1=1.0,
+        #                      T2=[], r=r,
+        #                      kappa=calibrated_params["kappa"],
+        #                      v0=calibrated_params["v0"],
+        #                      theta=calibrated_params["theta"],
+        #                      sigma=calibrated_params["sigma"],
+        #                      rho=calibrated_params["rho"]).plot_IV_smile()
+        #
+        # print("\n" + "=" * 50)
+        # print("  🏦 IMPLICIT VOLATILITY SMILE (CALLS VANILLE)")
+        # print("=" * 50 + "\n")
+        # #Display de la vol implicite smile pour les Calls Vanille
+        # ImpliedVolCalculatorVanilla(S0=S0,
+        #                             k_values=[],
+        #                             T=1.0,
+        #                             r=r,
+        #                             kappa=calibrated_params["kappa"],
+        #                             v0=calibrated_params["v0"],
+        #                             theta=calibrated_params["theta"],
+        #                             sigma=calibrated_params["sigma"],
+        #                             rho=calibrated_params["rho"]).plot_IV_smile()
 
         print("\n" + "=" * 50)
         print("  ⚖️ CALCUL DES GRECS")

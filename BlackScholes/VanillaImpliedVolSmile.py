@@ -61,10 +61,10 @@ class ImpliedVolCalculatorVanilla:
         :param T_values: Liste des maturités T à tester
         :param num_strikes: Nombre de strikes à générer (défaut : 500)
         """
-        k_values = np.linspace(self.S0 * 0.4, self.S0*1.6, num_strikes).tolist()
+        k_values = np.linspace(self.S0 * 0.6, self.S0*1.4, num_strikes).tolist()
 
         if T_values is None:
-            T_values = [.4, .8, 1.0, 1.5, 2, 3]
+            T_values = [.44, .79, 1.05, 1.83]
 
         plt.figure(figsize=(12, 8))
         plt.gca().set_facecolor('#e6e6e6')

@@ -39,17 +39,6 @@ class HestonSimulator:
         S[:, 0] = self.S0
         v[:, 0] = self.v0
 
-        print("S", self.S0)
-        print("v", self.v0)
-        print("dt", self.dt)
-        print("n_steps", self.n_steps)
-        print("n_paths", n_paths)
-        print("device", self.device)
-        print("kappa", self.kappa)
-        print("theta", self.theta)
-        print("sigma", self.sigma)
-        print("rho", self.rho)
-
         dW_v = torch.randn(n_paths, self.n_steps - 1, device=CONFIG.device) * torch.sqrt(torch.tensor(self.dt, device=CONFIG.device))
 
         dZ = torch.randn(n_paths, self.n_steps - 1, device=CONFIG.device) * torch.sqrt(torch.tensor(self.dt, device=CONFIG.device))

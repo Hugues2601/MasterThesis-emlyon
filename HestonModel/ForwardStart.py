@@ -111,6 +111,12 @@ class ForwardStart(HestonModel):
         T0_t = self.T0.expand_as(S_t).to(CONFIG.device)
 
         print("T0_t: ", T0_t)
+
+        print("min de v_t", torch.min(v_paths))
+        print("max de v_t", torch.max(v_paths))
+        print("min de S_t", torch.min(S_paths))
+        print("max de S_t", torch.max(S_paths))
+
         print("S_t: ", S_t, "longueur:", len(S_t))
         print("S_t1: ", S_t1)
         print("v_t: ", v_t)

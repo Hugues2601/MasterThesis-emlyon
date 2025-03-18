@@ -38,7 +38,7 @@ def run(args):
         print("\n" + "=" * 50)
         print(" DES DONNÉES AVEC YAHOO FINANCE")
         print("=" * 50 + "\n")
-        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, filter_data=False)
+        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, get_csv_name="NDX_DATA_polygon_20250313_CLEANED")
         S0 = spot_price[0]
         r = risk_free_rate[0]
 
@@ -46,7 +46,7 @@ def run(args):
         print("\n" + "=" * 50)
         print(" CALIBRATION DU MODÈLE HESTON")
         print("=" * 50 + "\n")
-        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=2000)
+        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=5500)
         print("\nParamètres calibrés :")
         print(calibrated_params)
 
@@ -65,7 +65,7 @@ def run(args):
         fs_option.sensitivity_analysis_all(S0, r, calibrated_params)
 
         print("\n" + "=" * 50)
-        print("  🏦 IMPLICIT VOLATILITY SMILE (CALLS FORWARD START)")
+        print(" IMPLICIT VOLATILITY SMILE (CALLS FORWARD START)")
         print("=" * 50 + "\n")
         # Display du la vol implicite pour les Calls Forward Start
         ImpliedVolCalculatorFS(S0=S0,
@@ -126,14 +126,6 @@ def run(args):
                     sigma=calibrated_params["sigma"],
                      rho=calibrated_params["rho"])
 
-        # Analyse du PnL unexplained : on génére genre 10 000 chemins avec les parametres calibrés
-        # puis on calcule pnl total entre deux instant de chaque chemin, pnl expliqué avec les grecs
-        # On calcule a chaque fois le pnl inexpliqué et on regarde sa répartition
-
-
-    if "GET_YF_IV" in action:
-        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price = get_yfinance_data(ticker)
-        vol = implied_vol(strike, timetomaturity, lastPrice)
 
 
 

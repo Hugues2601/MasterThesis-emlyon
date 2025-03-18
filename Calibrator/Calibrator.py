@@ -24,6 +24,7 @@ class Calibrator:
         print(f"mean price of options: {calls_mean}")
         print(f"Standard Deviation of Options Prices: {np.std(self.market_prices)}")
         print(f"spot price: {self.S0}")
+
         S0 = torch.tensor(self.S0, dtype=torch.float64, device=device)
         K = torch.tensor(self.K, dtype=torch.float64, device=device)
         T = torch.tensor(self.T, dtype=torch.float64, device=device)
@@ -41,21 +42,32 @@ class Calibrator:
 
         for epoch in range(max_epochs):
             optimizer.zero_grad()
-            kappa = torch.exp(raw_kappa)
-            sigma = torch.sigmoid(raw_sigma)
-            v0 = raw_v0
-            theta = raw_theta
-            rho = -torch.sigmoid(raw_rho)
+            kappa = 0.5 + 7.5 * torch.sigmoid(raw_kappa)
+
+            v0 = 0.01 + 0.49 * torch.sigmoid(raw_v0)  # [0.01, 0.5]
+            theta = 0.01 + 0.49 * torch.sigmoid(raw_theta)  # [0.01, 0.5]
+            sigma = 0.05 + 0.95 * torch.sigmoid(raw_sigma)
+
+            # 🔥 Correction finale de theta pour assurer Feller
+  # Toujours positif
+            theta = torch.log1p(theta + (sigma ** 2) / (2 * kappa) + 1e-5)  # Transformation lisse
+
+            rho = -0.9 + 1.8 * torch.sigmoid(raw_rho)
 
             model_prices = heston_price(S0, K, T, r, kappa, v0, theta, sigma, rho)
             loss = torch.sqrt(torch.mean((model_prices - market_prices) ** 2))
-            loss.backward()
+
+            # 🔥 Ajout d’une pénalisation exponentielle pour renforcer Feller
+            feller_penalty = torch.exp(-10 * (2 * kappa * theta - sigma ** 2))  # Évite de frôler la limite
+            total_loss = loss + feller_penalty
+            total_loss.backward()
+
             optimizer.step()
             scheduler.step(loss)
             current_lr = scheduler.optimizer.param_groups[0]['lr']
 
             if epoch % 500 == 0:
-                print(f"Epoch {epoch}, Loss: {loss.item()}, LR: {current_lr}")
+                print(f"Epoch {epoch}, Loss: {loss.item()}, LR: {current_lr}, Feller Penalty: {feller_penalty.item()}")
 
             if loss.item() < loss_threshold:
                 print(f"Converged at epoch {epoch} with loss {loss.item()}")
@@ -68,7 +80,10 @@ class Calibrator:
             'sigma': sigma.item(),
             'rho': rho.item()
         }
+
+        print(f"Final Feller Condition: {2 * calibrated_params['kappa'] * calibrated_params['theta']} > {calibrated_params['sigma']**2}")
         return calibrated_params
+
 
 
 def plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params):

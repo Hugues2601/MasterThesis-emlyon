@@ -1,6 +1,6 @@
 import torch
 import matplotlib.pyplot as plt
-
+from config import CONFIG
 from HestonModel.ForwardStart import ForwardStart
 
 
@@ -39,29 +39,34 @@ class HestonSimulator:
         S[:, 0] = self.S0
         v[:, 0] = self.v0
 
-        dW_S = torch.randn(n_paths, self.n_steps - 1, device=self.device) * torch.sqrt(
-            torch.tensor(self.dt, device=self.device))
-        dW_v = self.rho * dW_S + torch.sqrt(torch.tensor(1 - self.rho ** 2)) * torch.randn(n_paths, self.n_steps - 1,
-                                                                                           device=self.device) * torch.sqrt(
-            torch.tensor(self.dt, device=self.device))
+        print("S", self.S0)
+        print("v", self.v0)
+        print("dt", self.dt)
+        print("n_steps", self.n_steps)
+        print("n_paths", n_paths)
+        print("device", self.device)
+        print("kappa", self.kappa)
+        print("theta", self.theta)
+        print("sigma", self.sigma)
+        print("rho", self.rho)
 
-        for t in range(1, self.n_steps):
-            v[:, t] = torch.maximum(
-                v[:, t - 1] + self.kappa * (self.theta - v[:, t - 1]) * self.dt +
-                self.sigma * torch.sqrt(torch.maximum(v[:, t - 1], torch.tensor(0.0, device=self.device))) * dW_v[:,
-                                                                                                             t - 1],
-                torch.tensor(0.0, device=self.device)
-            )
-            S[:, t] = S[:, t - 1] * torch.exp(
-                (self.r - 0.5 * v[:, t - 1]) * self.dt +
-                torch.sqrt(torch.maximum(v[:, t - 1], torch.tensor(0.0, device=self.device))) * dW_S[:, t - 1]
-            )
+        dW_v = torch.randn(n_paths, self.n_steps - 1, device=CONFIG.device) * torch.sqrt(torch.tensor(self.dt, device=CONFIG.device))
 
+        dZ = torch.randn(n_paths, self.n_steps - 1, device=CONFIG.device) * torch.sqrt(torch.tensor(self.dt, device=CONFIG.device))
 
+        dW_S = self.rho * dW_v + torch.sqrt(torch.tensor(1 - self.rho ** 2, device=CONFIG.device)) * dZ
+
+        for i in range(1, self.n_steps):
+            S[:, i] = S[:, i - 1] + S[:, i - 1] * (self.r * self.dt + torch.sqrt(v[:, i - 1]) * dW_S[:, i - 1])
+            v[:, i] = v[:, i - 1] + self.kappa * (self.theta - v[:, i - 1]) * self.dt + self.sigma * torch.sqrt(
+                v[:, i - 1]) * dW_v[:, i - 1]
+
+            # Empêcher les valeurs négatives de variance (Feller condition pas toujours respectée)
+            v[:, i] = torch.clamp(v[:, i], min=0)
 
         return S, v, dt_path  # Returns tensors directly
 
-    def plot_paths(self, S, v, num_paths=10):
+    def plot_paths(self, S, v, num_paths=1000):
         """
         Affiche les trajectoires simulées pour S et v.
 
@@ -97,6 +102,7 @@ class HestonSimulator:
 def pnl_analysis(S0, k, r, kappa, v0, theta, sigma, rho, T0, T1, T2):
     simulator = HestonSimulator(S0=S0, r=r, kappa=kappa, theta=theta, sigma=sigma, rho=rho, v0=v0, T=4.0, dt=1/252)
     S_paths, v_paths, dt_path = simulator.simulate(n_paths=15000)
+    simulator.plot_paths(S_paths, v_paths)
 
     forward_start = ForwardStart(S0=S0, k=k, T0=T0, T1=T1, T2=T2,
                                  r=r, kappa=kappa, v0=v0, theta=theta,

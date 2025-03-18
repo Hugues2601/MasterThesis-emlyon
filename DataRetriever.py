@@ -13,7 +13,7 @@ def get_treasury_yield() -> float:
 
 """ --------------------- Options Data from Yahoo Finance ---------------------"""
 
-def get_yfinance_data(symbol: str, to_csv: bool = False, filter_data: bool = True, get_csv_name=None):
+def get_yfinance_data(symbol: str, to_csv: bool = False, filter_data: bool = False, get_csv_name=None):
     if get_csv_name is None:
         stock = yf.Ticker(symbol)
         spot_price = stock.history(period="1d")['Close'].iloc[-1]

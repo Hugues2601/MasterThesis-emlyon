@@ -38,7 +38,7 @@ def run(args):
         print("\n" + "=" * 50)
         print(" DES DONNÉES AVEC YAHOO FINANCE")
         print("=" * 50 + "\n")
-        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, get_csv_name="SPX_DATA_polygon_20250313_CLEANED")
+        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, filter_data=False)
         S0 = spot_price[0]
         r = risk_free_rate[0]
 
@@ -140,7 +140,7 @@ def run(args):
 if __name__ == '__main__':
     input = {
         "action": ["CALIBRATE_HESTON_MODEL"],
-        "ticker": "TSLA",
+        "ticker": "AMZN",
         "params_fs" : {"S0": 5712.1011, "k": 1.0, "t0": 0.25, "T1": 1.0, "T2": 2.0, "r": 0.05, "kappa": 0.77576, "v0": 0.007, "theta": 0.03395, "sigma": 0.68546, "rho": -0.864341},
         "params_vanilla" : [100.0, 100.0, 2.0, 0.05, 2, 0.04, 0.04, 0.2, -0.7]
     }

@@ -9,9 +9,9 @@ import torch
 
 
 class HestonSimulator:
-    def __init__(self, S0, r, kappa, theta, sigma, rho, v0, T, dt, device="cuda"):
+    def __init__(self, S0, r, kappa, theta, sigma, rho, v0, T, dt, device="cuda", shock_intensity=0.02):
         self.S0 = S0
-        self.r = r
+        self.r = r  # Pas de choc sur r
         self.kappa = kappa
         self.theta = theta
         self.sigma = sigma
@@ -21,39 +21,52 @@ class HestonSimulator:
         self.dt = dt
         self.device = device
         self.n_steps = int(T / dt)
+        self.shock_intensity = shock_intensity  # Intensité des chocs aléatoires
 
     def simulate(self, n_paths):
         """
-        Simulate the Heston model for a given number of paths.
+        Simule le modèle de Heston avec des chocs aléatoires sur kappa, theta et sigma,
+        tout en respectant la condition de Feller.
 
         Args:
-        - n_paths (int): Number of Monte Carlo simulation paths.
+        - n_paths (int): Nombre de simulations Monte Carlo.
 
         Returns:
-        - S (torch.Tensor): Simulated asset price paths of shape (n_paths, n_steps).
-        - v (torch.Tensor): Simulated variance paths of shape (n_paths, n_steps).
+        - S (torch.Tensor): Trajectoires du prix de l'actif de taille (n_paths, n_steps).
+        - v (torch.Tensor): Trajectoires de la variance de taille (n_paths, n_steps).
         """
         S = torch.zeros(n_paths, self.n_steps, device=self.device)
         v = torch.zeros(n_paths, self.n_steps, device=self.device)
-        dt_path = torch.full((n_paths, self.n_steps), self.dt, device=self.device)
+        dt_tensor = torch.full((n_paths, self.n_steps), self.dt, device=self.device)
+
         S[:, 0] = self.S0
         v[:, 0] = self.v0
 
-        dW_v = torch.randn(n_paths, self.n_steps - 1, device=CONFIG.device) * torch.sqrt(torch.tensor(self.dt, device=CONFIG.device))
-
-        dZ = torch.randn(n_paths, self.n_steps - 1, device=CONFIG.device) * torch.sqrt(torch.tensor(self.dt, device=CONFIG.device))
-
-        dW_S = self.rho * dW_v + torch.sqrt(torch.tensor(1 - self.rho ** 2, device=CONFIG.device)) * dZ
+        dW_v = torch.randn(n_paths, self.n_steps - 1, device=self.device) * torch.sqrt(
+            torch.tensor(self.dt, device=self.device))
+        dZ = torch.randn(n_paths, self.n_steps - 1, device=self.device) * torch.sqrt(
+            torch.tensor(self.dt, device=self.device))
+        dW_S = self.rho * dW_v + torch.sqrt(torch.tensor(1 - self.rho ** 2, device=self.device)) * dZ
 
         for i in range(1, self.n_steps):
+            # Génération de chocs aléatoires sur kappa, theta, sigma
+            kappa_shock = self.kappa * (1 + 0.02 * torch.randn(n_paths, device=self.device))
+            theta_shock = self.theta * (1 + 0.005 * torch.randn(n_paths, device=self.device))
+            sigma_shock = self.sigma * (1 + 0.02 * torch.randn(n_paths, device=self.device))
+
+            # Vérification et correction de la condition de Feller : 2 * kappa * theta >= sigma^2
+            feller_condition = 2 * kappa_shock * theta_shock - sigma_shock ** 2
+            violated = feller_condition < 0  # Indique si la condition est violée
+
+            kappa_shock[violated] = sigma_shock[violated] ** 2 / (2 * theta_shock[violated])
+
             S[:, i] = S[:, i - 1] + S[:, i - 1] * (self.r * self.dt + torch.sqrt(v[:, i - 1]) * dW_S[:, i - 1])
-            v[:, i] = v[:, i - 1] + self.kappa * (self.theta - v[:, i - 1]) * self.dt + self.sigma * torch.sqrt(
+            v[:, i] = v[:, i - 1] + kappa_shock * (theta_shock - v[:, i - 1]) * self.dt + sigma_shock * torch.sqrt(
                 v[:, i - 1]) * dW_v[:, i - 1]
 
-            # Empêcher les valeurs négatives de variance (Feller condition pas toujours respectée)
             v[:, i] = torch.clamp(v[:, i], min=0)
 
-        return S, v, dt_path  # Returns tensors directly
+        return S, v, dt_tensor
 
     def plot_paths(self, S, v, num_paths=1000):
         """

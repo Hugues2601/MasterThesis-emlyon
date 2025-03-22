@@ -38,7 +38,7 @@ def run(args):
         print("\n" + "=" * 50)
         print(" DES DONNÉES AVEC YAHOO FINANCE")
         print("=" * 50 + "\n")
-        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, get_csv_name="NDX_DATA_polygon_20250313_CLEANED")
+        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, get_csv_name="SPX_DATA_polygon_20250313_CLEANED")
         S0 = spot_price[0]
         r = risk_free_rate[0]
 
@@ -64,51 +64,51 @@ def run(args):
                                  sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
         fs_option.sensitivity_analysis_all(S0, r, calibrated_params)
 
-        print("\n" + "=" * 50)
-        print(" IMPLICIT VOLATILITY SMILE (CALLS FORWARD START)")
-        print("=" * 50 + "\n")
-        # Display du la vol implicite pour les Calls Forward Start
-        ImpliedVolCalculatorFS(S0=S0,
-                             k_values=[],
-                             T0=0.0, T1=1.0,
-                             T2=[], r=r,
-                             kappa=calibrated_params["kappa"],
-                             v0=calibrated_params["v0"],
-                             theta=calibrated_params["theta"],
-                             sigma=calibrated_params["sigma"],
-                             rho=calibrated_params["rho"]).plot_IV_smile()
-
-        print("\n" + "=" * 50)
-        print("IMPLICIT VOLATILITY SMILE (CALLS VANILLE)")
-        print("=" * 50 + "\n")
-        #Display de la vol implicite smile pour les Calls Vanille
-        ImpliedVolCalculatorVanilla(S0=S0,
-                                    k_values=[],
-                                    T=1.0,
-                                    r=r,
-                                    kappa=calibrated_params["kappa"],
-                                    v0=calibrated_params["v0"],
-                                    theta=calibrated_params["theta"],
-                                    sigma=calibrated_params["sigma"],
-                                    rho=calibrated_params["rho"]).plot_IV_smile()
-
-        plot_implied_volatility(strike, impliedVolatility, timetomaturity)
-
-        print("\n" + "=" * 50)
-        print("CALCUL DES GRECS")
-        print("=" * 50 + "\n")
-        # Affichage des Grecques
-        DisplayGreeks(S0=S0,
-                      k=1.0,
-                      T0=0.25,
-                      T1=1.0,
-                      T2=2.0,
-                      r=r,
-                      kappa=calibrated_params["kappa"],
-                      v0=calibrated_params["v0"],
-                      theta=calibrated_params["theta"],
-                      sigma=calibrated_params["sigma"],
-                      rho=calibrated_params["rho"]).display()
+        # print("\n" + "=" * 50)
+        # print(" IMPLICIT VOLATILITY SMILE (CALLS FORWARD START)")
+        # print("=" * 50 + "\n")
+        # # Display du la vol implicite pour les Calls Forward Start
+        # ImpliedVolCalculatorFS(S0=S0,
+        #                      k_values=[],
+        #                      T0=0.0, T1=1.0,
+        #                      T2=[], r=r,
+        #                      kappa=calibrated_params["kappa"],
+        #                      v0=calibrated_params["v0"],
+        #                      theta=calibrated_params["theta"],
+        #                      sigma=calibrated_params["sigma"],
+        #                      rho=calibrated_params["rho"]).plot_IV_smile()
+        #
+        # print("\n" + "=" * 50)
+        # print("IMPLICIT VOLATILITY SMILE (CALLS VANILLE)")
+        # print("=" * 50 + "\n")
+        # #Display de la vol implicite smile pour les Calls Vanille
+        # ImpliedVolCalculatorVanilla(S0=S0,
+        #                             k_values=[],
+        #                             T=1.0,
+        #                             r=r,
+        #                             kappa=calibrated_params["kappa"],
+        #                             v0=calibrated_params["v0"],
+        #                             theta=calibrated_params["theta"],
+        #                             sigma=calibrated_params["sigma"],
+        #                             rho=calibrated_params["rho"]).plot_IV_smile()
+        #
+        # plot_implied_volatility(strike, impliedVolatility, timetomaturity)
+        #
+        # print("\n" + "=" * 50)
+        # print("CALCUL DES GRECS")
+        # print("=" * 50 + "\n")
+        # # Affichage des Grecques
+        # DisplayGreeks(S0=S0,
+        #               k=1.0,
+        #               T0=0.25,
+        #               T1=1.0,
+        #               T2=2.0,
+        #               r=r,
+        #               kappa=calibrated_params["kappa"],
+        #               v0=calibrated_params["v0"],
+        #               theta=calibrated_params["theta"],
+        #               sigma=calibrated_params["sigma"],
+        #               rho=calibrated_params["rho"]).display()
 
         print("\n" + "=" * 50)
         print("ANALYSE DU PNL INEXPLIQUÉ")

@@ -45,10 +45,10 @@ class HestonSimulator:
         dW_S = self.rho * dW_v + torch.sqrt(torch.tensor(1 - self.rho ** 2, device=self.device)) * dZ
 
         for i in range(1, self.n_steps):
-            # Génération de chocs aléatoires sur kappa, theta, sigma
-            kappa_shock = self.kappa * (1 + 0.1 * torch.randn(1, device=self.device))
-            theta_shock = self.theta * (1 + 0.2 * torch.randn(1, device=self.device))
-            sigma_shock = self.sigma * (1 + 0.3 * torch.randn(1, device=self.device))
+
+            kappa_shock = self.kappa * (1 + 0.1 * torch.randn(n_paths, device=self.device))
+            theta_shock = self.theta * (1 + 0.2 * torch.randn(n_paths, device=self.device))
+            sigma_shock = self.sigma * (1 + 0.3 * torch.randn(n_paths, device=self.device))
 
             S[:, i] = S[:, i - 1] + S[:, i - 1] * (self.r * self.dt + torch.sqrt(v[:, i - 1]) * dW_S[:, i - 1])
             v[:, i] = v[:, i - 1] + kappa_shock * (theta_shock - v[:, i - 1]) * self.dt + sigma_shock * torch.sqrt(

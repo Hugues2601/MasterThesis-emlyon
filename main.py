@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PnL_Analysis.Path_Simulation import pnl_analysis
 from DisplayFactory.Plot_Market_IV import plot_implied_volatility
+import torch
 
 def run(args):
     args = json.loads(args)
@@ -34,6 +35,7 @@ def run(args):
 
     if "CALIBRATE_HESTON_MODEL" in action:
 
+        torch.set_default_dtype(torch.float32)
         # Recuperation et traitement des données sur yf
         print("\n" + "=" * 50)
         print(" DES DONNÉES AVEC YAHOO FINANCE")

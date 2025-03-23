@@ -46,7 +46,7 @@ def run(args):
         print("\n" + "=" * 50)
         print(" CALIBRATION DU MODÈLE HESTON")
         print("=" * 50 + "\n")
-        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=5500)
+        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=4500)
         print("\nParamètres calibrés :")
         print(calibrated_params)
 

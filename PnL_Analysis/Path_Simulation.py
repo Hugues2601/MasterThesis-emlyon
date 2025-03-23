@@ -1,10 +1,7 @@
-import torch
 import matplotlib.pyplot as plt
-from config import CONFIG
 from HestonModel.ForwardStart import ForwardStart
-
-
-# Définition de la classe HestonSimulator
+import numpy as np
+import scipy.stats as stats
 import torch
 
 
@@ -54,17 +51,15 @@ class HestonSimulator:
             theta_shock = self.theta
             sigma_shock = self.sigma
 
-            # Vérification et correction de la condition de Feller : 2 * kappa * theta >= sigma^2
-            feller_condition = 2 * kappa_shock * theta_shock - sigma_shock ** 2
-            violated = feller_condition < 0  # Indique si la condition est violée
-
-            kappa_shock[violated] = sigma_shock[violated] ** 2 / (2 * theta_shock[violated])
+            # # Vérification et correction de la condition de Feller : 2 * kappa * theta >= sigma^2
+            # feller_condition = 2 * kappa_shock * theta_shock - sigma_shock ** 2
+            # violated = feller_condition < 0  # Indique si la condition est violée
+            #
+            # kappa_shock[violated] = sigma_shock[violated] ** 2 / (2 * theta_shock[violated])
 
             S[:, i] = S[:, i - 1] + S[:, i - 1] * (self.r * self.dt + torch.sqrt(v[:, i - 1]) * dW_S[:, i - 1])
             v[:, i] = v[:, i - 1] + kappa_shock * (theta_shock - v[:, i - 1]) * self.dt + sigma_shock * torch.sqrt(
                 v[:, i - 1]) * dW_v[:, i - 1]
-
-            v[:, i] = torch.clamp(v[:, i], min=0)
 
         return S, v, dt_tensor
 
@@ -110,26 +105,20 @@ def pnl_analysis(S0, k, r, kappa, v0, theta, sigma, rho, T0, T1, T2):
                                  r=r, kappa=kappa, v0=v0, theta=theta,
                                  sigma=sigma, rho=rho)
 
-    # Calcul des prix à t=100 et t+1=101
     prices_t, prices_t1, pnl_tot = forward_start.compute_heston_prices(S_paths, v_paths, t=100)
 
 
-    print("PnL total :", pnl_tot)
 
     explained_pnl = forward_start.compute_explained_pnl(S_paths, v_paths, t=100, dt=1/252, dt_path=dt_path)
-    print("PnL expliqué: ", explained_pnl)
 
     pnl_inex = pnl_tot - explained_pnl
 
-    import torch
-    import numpy as np
-    import scipy.stats as stats
+
 
     # Convertir en NumPy
     pnl_inex_np = pnl_inex.detach().cpu().numpy()
     pn_tot_np = pnl_tot.detach().cpu().numpy()
     print("Ratio PnL inexpliqué / PnL total :", pnl_inex_np.mean() / pn_tot_np.mean())
-    print(pnl_inex_np)
 
     # Statistiques descriptives
     mean = pnl_inex_np.mean()

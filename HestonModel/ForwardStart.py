@@ -110,16 +110,10 @@ class ForwardStart(HestonModel):
         dt_t = dt_path[:, t].to(CONFIG.device)
         T0_t = self.T0.expand_as(S_t).to(CONFIG.device)
 
-        print("T0_t: ", T0_t)
-
         print("min de v_t", torch.min(v_paths))
         print("max de v_t", torch.max(v_paths))
         print("min de S_t", torch.min(S_paths))
         print("max de S_t", torch.max(S_paths))
-
-        print("S_t: ", S_t, "longueur:", len(S_t))
-        print("S_t1: ", S_t1)
-        print("v_t: ", v_t)
 
         # Création d'instances batch ForwardStart pour calculer les prix et grecs
         forward_start_t = ForwardStart(S0=S_t, k=self.k, T0=T0_t, T1=self.T1, T2=self.T2,
@@ -136,17 +130,10 @@ class ForwardStart(HestonModel):
         vomma = forward_start_t.compute_greek("vomma", batch=True)
         theta = forward_start_t.compute_greek("theta", batch=True)
 
-        print("THETA:", theta[:5])
         # Calcul des variations des variables
         dS = S_t1 - S_t
         dv = v_t1 - v_t
         dT = 1/252
-
-        # Debugging : Vérifier les valeurs intermédiaires
-        print("Delta:", delta[:5])
-        print("Vega:", vega[:5])
-        print("dS:", dS[:5])
-        print("dv:", dv[:5])
 
         # Calcul du PnL expliqué (sans dTheta ni dRho car r est constant)
         explained_pnl = delta * dS + vega * dv + theta * dT + 0.5 * vanna * dS * dv + 0.5 * vomma * dv**2

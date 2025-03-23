@@ -6,7 +6,7 @@ import torch
 
 
 class HestonSimulator:
-    def __init__(self, S0, r, kappa, theta, sigma, rho, v0, T, dt, device="cuda", shock_intensity=0.02):
+    def __init__(self, S0, r, kappa, theta, sigma, rho, v0, T, dt, device="cuda"):
         self.S0 = S0
         self.r = r  # Pas de choc sur r
         self.kappa = kappa
@@ -18,7 +18,6 @@ class HestonSimulator:
         self.dt = dt
         self.device = device
         self.n_steps = int(T / dt)
-        self.shock_intensity = shock_intensity  # Intensité des chocs aléatoires
 
     def simulate(self, n_paths):
         """
@@ -47,15 +46,9 @@ class HestonSimulator:
 
         for i in range(1, self.n_steps):
             # Génération de chocs aléatoires sur kappa, theta, sigma
-            kappa_shock = self.kappa
-            theta_shock = self.theta
-            sigma_shock = self.sigma
-
-            # # Vérification et correction de la condition de Feller : 2 * kappa * theta >= sigma^2
-            # feller_condition = 2 * kappa_shock * theta_shock - sigma_shock ** 2
-            # violated = feller_condition < 0  # Indique si la condition est violée
-            #
-            # kappa_shock[violated] = sigma_shock[violated] ** 2 / (2 * theta_shock[violated])
+            kappa_shock = self.kappa * (1 + 0.1 * torch.randn(1, device=self.device))
+            theta_shock = self.theta * (1 + 0.2 * torch.randn(1, device=self.device))
+            sigma_shock = self.sigma * (1 + 0.3 * torch.randn(1, device=self.device))
 
             S[:, i] = S[:, i - 1] + S[:, i - 1] * (self.r * self.dt + torch.sqrt(v[:, i - 1]) * dW_S[:, i - 1])
             v[:, i] = v[:, i - 1] + kappa_shock * (theta_shock - v[:, i - 1]) * self.dt + sigma_shock * torch.sqrt(

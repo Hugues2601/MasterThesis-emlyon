@@ -21,11 +21,11 @@ class ForwardStart(HestonModel):
             phi = phi.to(CONFIG.device).type(torch.complex128)
 
 
-        S0 = self.S0.to(CONFIG.device).type(torch.float64)
-        T0 = self.T0.to(CONFIG.device).type(torch.float64)
-        T1 = self.T1.to(CONFIG.device).type(torch.float64)
-        T2 = self.T2.to(CONFIG.device).type(torch.float64)
-        r = self.r.to(CONFIG.device).type(torch.float64)
+        S0 = self.S0.to(CONFIG.device).type(torch.float32)
+        T0 = self.T0.to(CONFIG.device).type(torch.float32)
+        T1 = self.T1.to(CONFIG.device).type(torch.float32)
+        T2 = self.T2.to(CONFIG.device).type(torch.float32)
+        r = self.r.to(CONFIG.device).type(torch.float32)
 
         tau = T2-T1
 
@@ -178,7 +178,7 @@ class ForwardStart(HestonModel):
         prices = []
 
         for value in param_range:
-            setattr(self, param_name, torch.tensor(value, device=CONFIG.device, dtype=torch.float64))
+            setattr(self, param_name, torch.tensor(value, device=CONFIG.device, dtype=torch.float32))
             price = self.heston_price().item()
             prices.append(price)
 

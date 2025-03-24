@@ -4,10 +4,10 @@ from DataRetriever import get_yfinance_data
 
 class VanillaBlackScholes:
     def __init__(self, S0, K, T, r, sigma, type="call"):
-        self.S0 = torch.tensor([S0], device=CONFIG.device, dtype=torch.float64, requires_grad=True)
-        self.K = torch.tensor(K, device=CONFIG.device,dtype=torch.float64)
-        self.T = torch.tensor(T, device=CONFIG.device,dtype=torch.float64)
-        self.r = torch.tensor([r],device=CONFIG.device, dtype=torch.float64)
+        self.S0 = torch.tensor([S0], device=CONFIG.device, dtype=torch.float32, requires_grad=True)
+        self.K = torch.tensor(K, device=CONFIG.device,dtype=torch.float32)
+        self.T = torch.tensor(T, device=CONFIG.device,dtype=torch.float32)
+        self.r = torch.tensor([r],device=CONFIG.device, dtype=torch.float32)
         self.sigma = sigma
         self.type = type
 
@@ -35,9 +35,9 @@ class VanillaBlackScholes:
 def implied_vol(k_values, T_values, market_prices):
     device = CONFIG.device
 
-    k_t = torch.tensor(k_values, device=device, dtype=torch.float64)
-    T_t = torch.tensor(T_values, device=device, dtype=torch.float64)
-    m_t = torch.tensor(market_prices, device=device, dtype=torch.float64)
+    k_t = torch.tensor(k_values, device=device, dtype=torch.float32)
+    T_t = torch.tensor(T_values, device=device, dtype=torch.float32)
+    m_t = torch.tensor(market_prices, device=device, dtype=torch.float32)
 
     theta = torch.tensor([0.2] * len(k_values), device=device, requires_grad=True)
 

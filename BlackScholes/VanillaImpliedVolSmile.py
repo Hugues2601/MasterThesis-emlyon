@@ -21,8 +21,8 @@ class ImpliedVolCalculatorVanilla:
 
     def VanillaImpliedVol(self):
         # Conversion des listes en tenseurs GPU
-        k_values_tensor = torch.tensor(self.k_values, device=CONFIG.device, dtype=torch.float64)
-        T_tensor = torch.tensor(self.T, device=CONFIG.device, dtype=torch.float64)
+        k_values_tensor = torch.tensor(self.k_values, device=CONFIG.device, dtype=torch.float32)
+        T_tensor = torch.tensor(self.T, device=CONFIG.device, dtype=torch.float32)
 
         # Initialisation des paramètres optimisables (theta utilisé pour sigma implicite)
         theta = torch.tensor([0.2] * len(self.k_values), device=CONFIG.device, requires_grad=True)

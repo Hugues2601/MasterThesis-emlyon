@@ -16,9 +16,9 @@ class VanillaHestonPrice(HestonModel):
             phi = phi.to(CONFIG.device).type(torch.complex128)
 
 
-        S0 = self.S0.to(CONFIG.device).type(torch.float64)
-        T = self.T.to(CONFIG.device).type(torch.float64)
-        r = self.r.to(CONFIG.device).type(torch.float64)
+        S0 = self.S0.to(CONFIG.device).type(torch.float32)
+        T = self.T.to(CONFIG.device).type(torch.float32)
+        r = self.r.to(CONFIG.device).type(torch.float32)
 
         a = -0.5 * phi ** 2 - 0.5 * 1j * phi
         b = self.kappa - self.rho * self.sigma * 1j * phi

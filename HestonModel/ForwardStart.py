@@ -126,8 +126,8 @@ class ForwardStart(HestonModel):
         # Calcul des Grecs
         delta = forward_start_t.compute_greek("delta", batch=True)
         vega = forward_start_t.compute_greek("vega", batch=True)
-        vanna = forward_start_t.compute_greek("vanna", batch=True)
-        vomma = forward_start_t.compute_greek("vomma", batch=True)
+        # vanna = forward_start_t.compute_greek("vanna", batch=True)
+        # vomma = forward_start_t.compute_greek("vomma", batch=True)
         theta = forward_start_t.compute_greek("theta", batch=True)
 
         # Calcul des variations des variables
@@ -135,8 +135,8 @@ class ForwardStart(HestonModel):
         dv = v_t1 - v_t
         dT = 1/252
 
-        # Calcul du PnL expliqué (sans dTheta ni dRho car r est constant)
-        explained_pnl = delta * dS + vega * dv + theta * dT + 0.5 * vanna * dS * dv + 0.5 * vomma * dv**2
+        # explained_pnl = delta * dS + vega * dv + theta * dT + 0.5 * vanna * dS * dv + 0.5 * vomma * dv**2
+        explained_pnl = delta * dS + vega * dv + theta * dT
 
         return explained_pnl
 

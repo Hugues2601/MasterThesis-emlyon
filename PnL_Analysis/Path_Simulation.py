@@ -91,7 +91,7 @@ class HestonSimulator:
 
 def pnl_analysis(S0, k, r, kappa, v0, theta, sigma, rho, T0, T1, T2):
     simulator = HestonSimulator(S0=S0, r=r, kappa=kappa, theta=theta, sigma=sigma, rho=rho, v0=v0, T=4.0, dt=1/252)
-    S_paths, v_paths, dt_path = simulator.simulate(n_paths=15_000)
+    S_paths, v_paths, dt_path = simulator.simulate(n_paths=20_000)
     simulator.plot_paths(S_paths, v_paths)
 
     forward_start = ForwardStart(S0=S0, k=k, T0=T0, T1=T1, T2=T2,

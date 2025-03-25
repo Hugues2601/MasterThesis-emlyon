@@ -42,13 +42,13 @@ def run(args):
         S0 = spot_price[0]
         r = risk_free_rate[0]
 
-        # Calibration de Heston
-        print("\n" + "=" * 50)
-        print(" CALIBRATION DU MODÈLE HESTON")
-        print("=" * 50 + "\n")
-        calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=4500)
-        print("\nParamètres calibrés :")
-        print(calibrated_params)
+        # # Calibration de Heston
+        # print("\n" + "=" * 50)
+        # print(" CALIBRATION DU MODÈLE HESTON")
+        # print("=" * 50 + "\n")
+        # calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=4500)
+        # print("\nParamètres calibrés :")
+        # print(calibrated_params)
 
         # # Display graphique des prix du marché vs des prix calculés avec Heston et avec les parametres calibrés
         # print("\n" + "=" * 50)
@@ -114,6 +114,10 @@ def run(args):
         print("ANALYSE DU PNL INEXPLIQUÉ")
         print("=" * 50 + "\n")
 
+        calibrated_params={'kappa': 7.6402974128723145, 'v0': 0.03784135729074478, 'theta': 0.034553635865449905,
+         'sigma': 0.19902223348617554, 'rho': -0.8408819437026978}
+        S0=5667.65
+        r=0.043
         pnl_analysis(S0=S0,
                     k=1.0,
                     T0=0.25,

@@ -33,20 +33,33 @@ class HestonSimulator:
             torch.tensor(self.dt, device=self.device))
         dW_S = self.rho * dW_v + torch.sqrt(torch.tensor(1 - self.rho ** 2, device=self.device)) * dZ
 
-        # Valeurs initiales dynamiques = valeurs cibles
+        # Valeurs dynamiques initiales
         kappa = torch.full((n_paths,), self.kappa, device=self.device)
         theta = torch.full((n_paths,), self.theta, device=self.device)
         sigma = torch.full((n_paths,), self.sigma, device=self.device)
 
         for i in range(1, self.n_steps):
-            # AR(1) direct dans la boucle pour les chocs
+            # AR(1) update avec clamping
             kappa = kappa + 0.1 * (self.kappa - kappa) + 0.05 * torch.randn(n_paths, device=self.device)
             theta = theta + 0.05 * (self.theta - theta) + 0.005 * torch.randn(n_paths, device=self.device)
             sigma = sigma + 0.1 * (self.sigma - sigma) + 0.02 * torch.randn(n_paths, device=self.device)
 
-            S[:, i] = S[:, i - 1] + S[:, i - 1] * (self.r * self.dt + torch.sqrt(v[:, i - 1]) * dW_S[:, i - 1])
-            v[:, i] = v[:, i - 1] + kappa * (theta - v[:, i - 1]) * self.dt + \
-                      sigma * torch.sqrt(v[:, i - 1]) * dW_v[:, i - 1]
+            kappa = torch.clamp(kappa, min=1e-4, max=10)
+            theta = torch.clamp(theta, min=1e-4, max=1)
+            sigma = torch.clamp(sigma, min=1e-4, max=5)
+
+            # Racine de v (clamp pour éviter NaN)
+            v_prev_clamped = torch.clamp(v[:, i - 1], min=1e-8)
+            sqrt_v = torch.sqrt(v_prev_clamped)
+
+            # Update S
+            S[:, i] = S[:, i - 1] + S[:, i - 1] * (self.r * self.dt + sqrt_v * dW_S[:, i - 1])
+
+            # Update v
+            v[:, i] = v[:, i - 1] + kappa * (theta - v[:, i - 1]) * self.dt + sigma * sqrt_v * dW_v[:, i - 1]
+
+            # Clamp v après update
+            v[:, i] = torch.clamp(v[:, i], min=1e-8)
 
         return S, v, dt_tensor
 

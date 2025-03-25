@@ -35,9 +35,6 @@ def run(args):
 
     if "CALIBRATE_HESTON_MODEL" in action:
         torch.set_default_dtype(torch.float32)
-        import os
-        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-
         print("\n" + "=" * 50)
         print(" DES DONNÉES AVEC YAHOO FINANCE")
         print("=" * 50 + "\n")

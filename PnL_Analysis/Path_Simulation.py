@@ -8,7 +8,7 @@ import torch
 class HestonSimulator:
     def __init__(self, S0, r, kappa, theta, sigma, rho, v0, T, dt, device="cuda"):
         self.S0 = S0
-        self.r = r  # Pas de choc sur r
+        self.r = r
         self.kappa = kappa
         self.theta = theta
         self.sigma = sigma
@@ -20,17 +20,6 @@ class HestonSimulator:
         self.n_steps = int(T / dt)
 
     def simulate(self, n_paths):
-        """
-        Simule le modèle de Heston avec des chocs aléatoires sur kappa, theta et sigma,
-        tout en respectant la condition de Feller.
-
-        Args:
-        - n_paths (int): Nombre de simulations Monte Carlo.
-
-        Returns:
-        - S (torch.Tensor): Trajectoires du prix de l'actif de taille (n_paths, n_steps).
-        - v (torch.Tensor): Trajectoires de la variance de taille (n_paths, n_steps).
-        """
         S = torch.zeros(n_paths, self.n_steps, device=self.device)
         v = torch.zeros(n_paths, self.n_steps, device=self.device)
         dt_tensor = torch.full((n_paths, self.n_steps), self.dt, device=self.device)
@@ -44,17 +33,23 @@ class HestonSimulator:
             torch.tensor(self.dt, device=self.device))
         dW_S = self.rho * dW_v + torch.sqrt(torch.tensor(1 - self.rho ** 2, device=self.device)) * dZ
 
-        for i in range(1, self.n_steps):
+        # Valeurs initiales dynamiques = valeurs cibles
+        kappa = torch.full((n_paths,), self.kappa, device=self.device)
+        theta = torch.full((n_paths,), self.theta, device=self.device)
+        sigma = torch.full((n_paths,), self.sigma, device=self.device)
 
-            kappa_shock = self.kappa * (1 + 0.1 * torch.randn(n_paths, device=self.device))
-            theta_shock = self.theta * (1 + 0.2 * torch.randn(n_paths, device=self.device))
-            sigma_shock = self.sigma * (1 + 0.3 * torch.randn(n_paths, device=self.device))
+        for i in range(1, self.n_steps):
+            # AR(1) direct dans la boucle pour les chocs
+            kappa = kappa + 0.1 * (self.kappa - kappa) + 0.05 * torch.randn(n_paths, device=self.device)
+            theta = theta + 0.05 * (self.theta - theta) + 0.005 * torch.randn(n_paths, device=self.device)
+            sigma = sigma + 0.1 * (self.sigma - sigma) + 0.02 * torch.randn(n_paths, device=self.device)
 
             S[:, i] = S[:, i - 1] + S[:, i - 1] * (self.r * self.dt + torch.sqrt(v[:, i - 1]) * dW_S[:, i - 1])
-            v[:, i] = v[:, i - 1] + kappa_shock * (theta_shock - v[:, i - 1]) * self.dt + sigma_shock * torch.sqrt(
-                v[:, i - 1]) * dW_v[:, i - 1]
+            v[:, i] = v[:, i - 1] + kappa * (theta - v[:, i - 1]) * self.dt + \
+                      sigma * torch.sqrt(v[:, i - 1]) * dW_v[:, i - 1]
 
         return S, v, dt_tensor
+
 
     def plot_paths(self, S, v, num_paths=1000):
         """
@@ -91,7 +86,7 @@ class HestonSimulator:
 
 def pnl_analysis(S0, k, r, kappa, v0, theta, sigma, rho, T0, T1, T2):
     simulator = HestonSimulator(S0=S0, r=r, kappa=kappa, theta=theta, sigma=sigma, rho=rho, v0=v0, T=4.0, dt=1/252)
-    S_paths, v_paths, dt_path = simulator.simulate(n_paths=20_000)
+    S_paths, v_paths, dt_path = simulator.simulate(n_paths=15_000)
     simulator.plot_paths(S_paths, v_paths)
 
     forward_start = ForwardStart(S0=S0, k=k, T0=T0, T1=T1, T2=T2,

@@ -117,16 +117,16 @@ def plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_p
 
     # Plot global
     plt.figure(figsize=(10, 6))
-    plt.scatter(strike, lastPrice, color='blue', label='Market Prices', s=10)
-    plt.scatter(strike, heston_prices, color='red', marker='x', label='Heston Model Prices', s=10)
+    plt.scatter(strike, lastPrice, color='black', label='Market Options Prices', s=12)
+    plt.scatter(strike, heston_prices, color='#4682B4', marker='x', label='Heston Model Options Prices', s=12)
     plt.xlabel('Strike Price')
     plt.ylabel('Option Price')
-    plt.title('Market Prices vs Heston Model Prices')
+    plt.title('')
     plt.legend()
     plt.grid()
 
     # Affichage du R² global sur le plot
-    plt.text(min(strike), max(lastPrice), f'R² global = {R2_global:.4f}', fontsize=12,
+    plt.text(min(strike), max(lastPrice), f'R² = {R2_global:.4f}', fontsize=12,
              color='black', bbox=dict(facecolor='white', alpha=0.8))
 
     plt.show()
@@ -144,11 +144,11 @@ def plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_p
         # Calcul du R² par maturité
         R2_T = r2_score(lastPrices_T, hestonPrices_T)
 
-        plt.scatter(strikes_T, lastPrices_T, color='blue', label='Market Prices', s=10)
-        plt.scatter(strikes_T, hestonPrices_T, color='red', marker='x', label='Heston Model Prices', s=10)
+        plt.scatter(strikes_T, lastPrices_T, color='black', label='Market Prices', s=10)
+        plt.scatter(strikes_T, hestonPrices_T, color='gray', marker='x', label='Heston Model Prices', s=10)
         plt.xlabel('Strike Price')
         plt.ylabel('Option Price')
-        plt.title(f'Market vs Heston Prices (T={T:.2f})')
+        plt.title(f'Observed Options Prices vs Heston Model Prices (T={T:.2f})')
         plt.legend()
         plt.grid()
 

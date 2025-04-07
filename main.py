@@ -38,7 +38,7 @@ def run(args):
         print("\n" + "=" * 50)
         print(" DES DONNÉES AVEC YAHOO FINANCE")
         print("=" * 50 + "\n")
-        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, get_csv_name="SPX_DATA_polygon_20250323_CLEANED")
+        df, lastPrice, timetomaturity, impliedVolatility, strike, spot_price, risk_free_rate = get_yfinance_data(ticker, get_csv_name="SPX_DATA_polygon_20250321_CLEANED_r_0_03927")
         S0 = spot_price[0]
         r = risk_free_rate[0]
 
@@ -46,16 +46,17 @@ def run(args):
         # print("\n" + "=" * 50)
         # print(" CALIBRATION DU MODÈLE HESTON")
         # print("=" * 50 + "\n")
-        # calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=4500)
+        # calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=7000)
         # print("\nParamètres calibrés :")
         # print(calibrated_params)
 
-        # # Display graphique des prix du marché vs des prix calculés avec Heston et avec les parametres calibrés
-        # print("\n" + "=" * 50)
-        # print(" COMPARAISON PRIX DU MARCHÉ VS HESTON")
-        # print("=" * 50 + "\n")
-        # plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params)
-        #
+        calibrated_params = {'kappa': 2.41300630569458, 'v0': 0.029727613553404808, 'theta': 0.04138144478201866, 'sigma': 0.3084869682788849, 'rho': -0.8905978202819824}
+        # Display graphique des prix du marché vs des prix calculés avec Heston et avec les parametres calibrés
+        print("\n" + "=" * 50)
+        print(" COMPARAISON PRIX DU MARCHÉ VS HESTON")
+        print("=" * 50 + "\n")
+        plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params)
+
         # print("\n" + "=" * 50)
         # print(" VARIATIONS DES PARAMÈTRES CALIBRÉS (HESTON)")
         # print("=" * 50 + "\n")
@@ -110,25 +111,25 @@ def run(args):
         #               sigma=calibrated_params["sigma"],
         #               rho=calibrated_params["rho"]).display()
 
-        print("\n" + "=" * 50)
-        print("ANALYSE DU PNL INEXPLIQUÉ")
-        print("=" * 50 + "\n")
-
-        calibrated_params={'kappa': 7.6402974128723145, 'v0': 0.03784135729074478, 'theta': 0.034553635865449905,
-         'sigma': 0.19902223348617554, 'rho': -0.8408819437026978}
-        S0=5667.65
-        r=0.043
-        pnl_analysis(S0=S0,
-                    k=1.0,
-                    T0=0.25,
-                    T1=1.0,
-                    T2=2.0,
-                    r=r,
-                    kappa=calibrated_params["kappa"],
-                    v0=calibrated_params["v0"],
-                    theta=calibrated_params["theta"],
-                    sigma=calibrated_params["sigma"],
-                     rho=calibrated_params["rho"])
+        # print("\n" + "=" * 50)
+        # print("ANALYSE DU PNL INEXPLIQUÉ")
+        # print("=" * 50 + "\n")
+        #
+        # calibrated_params={'kappa': 7.6402974128723145, 'v0': 0.03784135729074478, 'theta': 0.034553635865449905,
+        #  'sigma': 0.19902223348617554, 'rho': -0.8408819437026978}
+        # S0=5667.65
+        # r=0.043
+        # pnl_analysis(S0=S0,
+        #             k=1.0,
+        #             T0=0.25,
+        #             T1=1.0,
+        #             T2=2.0,
+        #             r=r,
+        #             kappa=calibrated_params["kappa"],
+        #             v0=calibrated_params["v0"],
+        #             theta=calibrated_params["theta"],
+        #             sigma=calibrated_params["sigma"],
+        #              rho=calibrated_params["rho"])
 
 
 

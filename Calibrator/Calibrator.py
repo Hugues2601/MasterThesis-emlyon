@@ -158,3 +158,47 @@ def plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_p
 
         plt.show()
 
+
+
+
+def plot_residuals_heston(
+    model_class,
+    S0,
+    K_list,
+    T_list,
+    r,
+    market_prices,
+    kappa, v0, theta, sigma, rho,
+    plot_type="strike"  # ou "maturity"
+):
+    model_residuals = []
+    Ks, Ts = [], []
+
+    for K, T, market_price in zip(K_list, T_list, market_prices):
+        model = model_class(S0, K, T, r, kappa, v0, theta, sigma, rho, type="call")
+        price = model.heston_price().item()
+        residual = price - market_price
+
+        model_residuals.append(residual)
+        Ks.append(K)
+        Ts.append(T)
+
+    if plot_type == "strike":
+        x = Ks
+        xlabel = "Strike"
+    elif plot_type == "maturity":
+        x = Ts
+        xlabel = "Time to Maturity (Years)"
+    else:
+        raise ValueError("plot_type must be 'strike' or 'maturity'")
+
+    plt.figure(figsize=(10, 5))
+    plt.scatter(x, model_residuals, alpha=0.6, color='black')  # points en noir
+    plt.axhline(0, color="black", linestyle="--", linewidth=1)
+    plt.xlabel(xlabel)
+    plt.ylabel("Residuals (Model Price - Market Price)")
+    plt.grid(True)
+    plt.show()
+
+
+

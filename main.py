@@ -1,6 +1,6 @@
 from BlackScholes.FSImpliedVol import ImpliedVolCalculatorFS
 from BlackScholes.VanillaImpliedVolSmile import ImpliedVolCalculatorVanilla
-from Calibrator.Calibrator import plot_heston_vs_market
+from Calibrator.Calibrator import plot_heston_vs_market, plot_residuals_heston
 from imports import *
 import json
 import numpy as np
@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from PnL_Analysis.Path_Simulation import pnl_analysis
 from DisplayFactory.Plot_Market_IV import plot_implied_volatility
 import torch
+import time
 
 def run(args):
     args = json.loads(args)
@@ -42,6 +43,8 @@ def run(args):
         S0 = spot_price[0]
         r = risk_free_rate[0]
 
+        # start_time = time.time()
+        #
         # # Calibration de Heston
         # print("\n" + "=" * 50)
         # print(" CALIBRATION DU MODÈLE HESTON")
@@ -49,6 +52,12 @@ def run(args):
         # calibrated_params = Calibrator(S0, lastPrice, strike, timetomaturity, r).calibrate(max_epochs=7000)
         # print("\nParamètres calibrés :")
         # print(calibrated_params)
+        #
+        #
+        # end_time = time.time()
+        # elapsed_time = end_time - start_time
+        #
+        # print(f"Temps d'exécution de la calibration: {elapsed_time:.2f} secondes")
 
         calibrated_params = {'kappa': 2.41300630569458, 'v0': 0.029727613553404808, 'theta': 0.04138144478201866, 'sigma': 0.3084869682788849, 'rho': -0.8905978202819824}
         # Display graphique des prix du marché vs des prix calculés avec Heston et avec les parametres calibrés
@@ -57,6 +66,18 @@ def run(args):
         print("=" * 50 + "\n")
         plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params)
 
+        plot_residuals_heston(
+            VanillaHestonPrice,
+            S0=S0,
+            K_list=strike,
+            T_list=timetomaturity,
+            r=r,
+            market_prices=lastPrice,
+            kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"], sigma=calibrated_params["sigma"], rho=calibrated_params["rho"],
+            plot_type="strike"  # ou "maturity"
+        )
+
+        #
         # print("\n" + "=" * 50)
         # print(" VARIATIONS DES PARAMÈTRES CALIBRÉS (HESTON)")
         # print("=" * 50 + "\n")

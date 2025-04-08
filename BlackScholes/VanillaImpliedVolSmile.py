@@ -36,12 +36,12 @@ class ImpliedVolCalculatorVanilla:
             # Calcul du prix avec Heston
             VanillaHeston = VanillaHestonPrice(
                 S0=self.S0, K=k_values_tensor, T=T_tensor, r=self.r,
-                kappa=self.kappa, v0=self.v0, theta=self.theta, sigma=self.sigma, rho=self.rho, type="put"
+                kappa=self.kappa, v0=self.v0, theta=self.theta, sigma=self.sigma, rho=self.rho, type="call"
             ).heston_price()
 
             # Calcul du prix avec Black-Scholes (sigma optimisé)
             VanillaBS = VanillaBlackScholes(
-                S0=self.S0, K=k_values_tensor, T=T_tensor, r=self.r, sigma=sigma, type="put"
+                S0=self.S0, K=k_values_tensor, T=T_tensor, r=self.r, sigma=sigma, type="call"
             ).price()
 
             # Calcul de la loss
@@ -61,10 +61,10 @@ class ImpliedVolCalculatorVanilla:
         :param T_values: Liste des maturités T à tester
         :param num_strikes: Nombre de strikes à générer (défaut : 500)
         """
-        k_values = np.linspace(self.S0 * 0.6, self.S0*1.4, num_strikes).tolist()
+        k_values = np.linspace(4500, 7200, num_strikes).tolist()
 
         if T_values is None:
-            T_values = [.44, .79, 1.05, 1.83]
+            T_values = [.44, .60, .79, 1.05, 1.29, 1.83,]
 
         plt.figure(figsize=(12, 8))
         plt.gca().set_facecolor('#e6e6e6')
@@ -99,6 +99,121 @@ class ImpliedVolCalculatorVanilla:
         plt.gca().tick_params(colors='black')
 
         plt.show()
+
+
+def plot_implied_volatility(strike, implied_volatility, timetomaturity):
+    """
+    Plots implied volatility against strike price for different maturities.
+
+    Parameters:
+    - strike: List or array of strike prices.
+    - implied_volatility: List or array of implied volatilities.
+    - timetomaturity: List or array of time to maturity (same length as strike and implied_volatility).
+
+    Returns:
+    - A plot of implied volatility vs. strike price, grouped by maturity.
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    plt.figure(figsize=(12, 6))
+
+    # Convert to numpy array for easier processing
+    strike = np.array(strike)
+    implied_volatility = np.array(implied_volatility)
+    timetomaturity = np.array(timetomaturity)
+
+    # Get unique maturities and plot each one
+    unique_maturities = np.unique(timetomaturity)
+    for maturity in sorted(unique_maturities):
+        mask = timetomaturity == maturity
+        plt.plot(strike[mask], implied_volatility[mask], label=f"T={maturity:.2f}")
+
+    # Labels and title
+    plt.xlabel("Strike Price")
+    plt.ylabel("Implied Volatility")
+    plt.title("Market Implied Volatility Smile")
+    plt.legend(title="Maturity (Years)", loc="upper right")
+    plt.grid(True)
+
+    plt.show()
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+def plot_comparative_IV_smile(
+    S0,
+    strike_market,
+    iv_market,
+    timetomarket,
+    r,
+    kappa, v0, theta, sigma, rho,
+    selected_maturities=[.44, .60, .79, 1.05, 1.29, 1.83],
+    num_strikes=100
+):
+    plt.figure(figsize=(10, 5))
+    ax = plt.gca()
+    ax.set_facecolor('white')
+    ax.grid(True, linestyle='--', linewidth=0.7, alpha=0.7)
+
+    strike_range = np.linspace(4500, 7200, num_strikes).tolist()
+
+    # Palette pastel personnalisée (peut être étendue si besoin)
+    pastel_colors = [
+        "black",
+        "#8fbcbb",
+        "#a3be8c",
+        "#d08770",
+        "#e09ec7",
+        "#b48ead"
+    ]
+
+    for idx, T in enumerate(selected_maturities):
+        color = pastel_colors[idx % len(pastel_colors)]
+
+        # ---- IV du modèle Heston ----
+        model_IV = ImpliedVolCalculatorVanilla(
+            S0=S0,
+            k_values=strike_range,
+            T=[T] * len(strike_range),
+            r=r,
+            kappa=kappa,
+            v0=v0,
+            theta=theta,
+            sigma=sigma,
+            rho=rho
+        ).VanillaImpliedVol()
+
+        # ---- IV du marché (filtrée sur la même maturité) ----
+        mask = (np.isclose(timetomarket, T, atol=0.05)) & (np.array(strike_market) >= 4500)
+        strike_T = np.array(strike_market)[mask]
+        iv_T = np.array(iv_market)[mask]
+
+        # ---- Tracé ----
+        plt.plot(strike_range, model_IV, label=f"Heston — T={T:.2f}", color=color, linewidth=2)
+        if len(strike_T) > 0:
+            sorted_indices = np.argsort(strike_T)
+            plt.plot(
+                strike_T[sorted_indices],
+                iv_T[sorted_indices],
+                linestyle='--',
+                color=color,
+                linewidth=1.5,
+                label=f"Market — T={T:.2f}"
+            )
+        else:
+            print(f"⚠️ No market data for T ≈ {T:.2f}")
+
+    plt.xlabel("Strike", fontsize=13)
+    plt.ylabel("Implied Volatility", fontsize=13)
+    plt.legend(fontsize=10, loc='upper right', frameon=True)
+    plt.tight_layout()
+    plt.show()
+
+
+
+
 
 
 

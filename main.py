@@ -1,12 +1,11 @@
 from BlackScholes.FSImpliedVol import ImpliedVolCalculatorFS
-from BlackScholes.VanillaImpliedVolSmile import ImpliedVolCalculatorVanilla
+from BlackScholes.VanillaImpliedVolSmile import ImpliedVolCalculatorVanilla, plot_implied_volatility, plot_comparative_IV_smile
 from Calibrator.Calibrator import plot_heston_vs_market, plot_residuals_heston
 from imports import *
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 from PnL_Analysis.Path_Simulation import pnl_analysis
-from DisplayFactory.Plot_Market_IV import plot_implied_volatility
 import torch
 import time
 
@@ -43,6 +42,8 @@ def run(args):
         S0 = spot_price[0]
         r = risk_free_rate[0]
 
+        plt.plot()
+
         # start_time = time.time()
         #
         # # Calibration de Heston
@@ -60,22 +61,22 @@ def run(args):
         # print(f"Temps d'exécution de la calibration: {elapsed_time:.2f} secondes")
 
         calibrated_params = {'kappa': 2.41300630569458, 'v0': 0.029727613553404808, 'theta': 0.04138144478201866, 'sigma': 0.3084869682788849, 'rho': -0.8905978202819824}
-        # Display graphique des prix du marché vs des prix calculés avec Heston et avec les parametres calibrés
-        print("\n" + "=" * 50)
-        print(" COMPARAISON PRIX DU MARCHÉ VS HESTON")
-        print("=" * 50 + "\n")
-        plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params)
-
-        plot_residuals_heston(
-            VanillaHestonPrice,
-            S0=S0,
-            K_list=strike,
-            T_list=timetomaturity,
-            r=r,
-            market_prices=lastPrice,
-            kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"], sigma=calibrated_params["sigma"], rho=calibrated_params["rho"],
-            plot_type="strike"  # ou "maturity"
-        )
+        # # Display graphique des prix du marché vs des prix calculés avec Heston et avec les parametres calibrés
+        # print("\n" + "=" * 50)
+        # print(" COMPARAISON PRIX DU MARCHÉ VS HESTON")
+        # print("=" * 50 + "\n")
+        # plot_heston_vs_market(S0, lastPrice, strike, timetomaturity, r, calibrated_params)
+        #
+        # plot_residuals_heston(
+        #     VanillaHestonPrice,
+        #     S0=S0,
+        #     K_list=strike,
+        #     T_list=timetomaturity,
+        #     r=r,
+        #     market_prices=lastPrice,
+        #     kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"], sigma=calibrated_params["sigma"], rho=calibrated_params["rho"],
+        #     plot_type="strike"  # ou "maturity"
+        # )
 
         #
         # print("\n" + "=" * 50)
@@ -101,6 +102,7 @@ def run(args):
         #                      rho=calibrated_params["rho"]).plot_IV_smile()
         #
         # print("\n" + "=" * 50)
+
         # print("IMPLICIT VOLATILITY SMILE (CALLS VANILLE)")
         # print("=" * 50 + "\n")
         # #Display de la vol implicite smile pour les Calls Vanille
@@ -114,7 +116,21 @@ def run(args):
         #                             sigma=calibrated_params["sigma"],
         #                             rho=calibrated_params["rho"]).plot_IV_smile()
         #
-        # plot_implied_volatility(strike, impliedVolatility, timetomaturity)
+        plot_implied_volatility(strike, impliedVolatility, timetomaturity)
+
+        plot_comparative_IV_smile(
+            S0=S0,
+            strike_market=strike,
+            iv_market=impliedVolatility,
+            timetomarket=timetomaturity,
+            r=r,
+            kappa=calibrated_params["kappa"],
+            v0=calibrated_params["v0"],
+            theta=calibrated_params["theta"],
+            sigma=calibrated_params["sigma"],
+            rho=calibrated_params["rho"]
+        )
+
         #
         # print("\n" + "=" * 50)
         # print("CALCUL DES GRECS")

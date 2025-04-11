@@ -1,7 +1,8 @@
 from BlackScholes.FSImpliedVol import ImpliedVolCalculatorFS
 from BlackScholes.VanillaImpliedVolSmile import ImpliedVolCalculatorVanilla, plot_implied_volatility, plot_comparative_IV_smile
 from Calibrator.Calibrator import plot_heston_vs_market, plot_residuals_heston
-from HestonModel.ForwardStart import plot_forward_start_vs_vanilla_price_multi_maturity
+from HestonModel.ForwardStart import plot_forward_start_vs_vanilla_price_multi_maturity, \
+    plot_forward_start_price_t0_variation
 from imports import *
 import json
 import numpy as np
@@ -46,21 +47,41 @@ def run(args):
         calibrated_params = {'kappa': 2.41300630569458, 'v0': 0.029727613553404808, 'theta': 0.04138144478201866,
                              'sigma': 0.3084869682788849, 'rho': -0.8905978202819824}
 
-        k_values = np.linspace(0.6, 1.4, 100)
-        plot_forward_start_vs_vanilla_price_multi_maturity(
-            S0=S0,
-            k_range=k_values,
-            r=r,
-            kappa=calibrated_params["kappa"],
-            v0=calibrated_params["v0"],
-            theta=calibrated_params["theta"],
-            sigma=calibrated_params["sigma"],
-            rho=calibrated_params["rho"]
-        )
+        # k_values = np.linspace(0.6, 1.4, 100)
+        # plot_forward_start_vs_vanilla_price_multi_maturity(
+        #     S0=S0,
+        #     k_range=k_values,
+        #     r=r,
+        #     kappa=calibrated_params["kappa"],
+        #     v0=calibrated_params["v0"],
+        #     theta=calibrated_params["theta"],
+        #     sigma=calibrated_params["sigma"],
+        #     rho=calibrated_params["rho"]
+        # )
+        #
+        # plot_forward_start_price_t0_variation(
+        #     S0=S0,
+        #     k_range=k_values,
+        #     r=r,
+        #     kappa=calibrated_params["kappa"],
+        #     v0=calibrated_params["v0"],
+        #     theta=calibrated_params["theta"],
+        #     sigma=calibrated_params["sigma"],
+        #     rho=calibrated_params["rho"]
+        # )
 
-        for k in k_values:
-            price = ForwardStart(S0=S0, k=k, T0=0.0, T1=0.5, T2=1.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"], sigma=calibrated_params["sigma"], rho=calibrated_params["rho"]).heston_price()
-            print(f"Forward Start price for strike {k}: {price.item()}")
+        # price = ForwardStart(S0=S0, k=1.0, T0=0.0, T1=1.0, T2=2.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+        #                      sigma=calibrated_params["sigma"], rho=calibrated_params["rho"]).heston_price()
+        # print(f"Vanilla Heston price: {price.item()}")
+        #
+        # price = ForwardStart(S0=S0, k=1.0, T0=0.5, T1=1.0, T2=2.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+        #                      sigma=calibrated_params["sigma"], rho=calibrated_params["rho"]).heston_price()
+        # print(f"Vanilla Heston price: {price.item()}")
+        #
+        # price = ForwardStart(S0=S0, k=1.0, T0=0.75, T1=1.0, T2=2.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+        #                      sigma=calibrated_params["sigma"], rho=calibrated_params["rho"]).heston_price()
+        # print(f"Vanilla Heston price: {price.item()}")
+
         # start_time = time.time()
         #
         # # Calibration de Heston
@@ -99,10 +120,10 @@ def run(args):
         # print(" VARIATIONS DES PARAMÈTRES CALIBRÉS (HESTON)")
         # print("=" * 50 + "\n")
         #
-        # fs_option = ForwardStart(S0=S0, k=0.75, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
+        # fs_option = ForwardStart(S0=S0, k=0.75, T0=0.0, T1=.5, T2=1.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
         #                          sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
         # fs_option.sensitivity_analysis_all(S0, r, calibrated_params)
-        #
+        # #
         # print("\n" + "=" * 50)
         # print(" IMPLICIT VOLATILITY SMILE (CALLS FORWARD START)")
         # print("=" * 50 + "\n")
@@ -118,6 +139,19 @@ def run(args):
         #                      rho=calibrated_params["rho"]).plot_IV_smile()
         #
         # print("\n" + "=" * 50)
+
+
+        """ PLOT DE SURFACES DE VOLATILITE """
+
+        ImpliedVolCalculatorFS(S0=S0,
+                               k_values=[],
+                               T0=0.0, T1=1.0,
+                               T2=[], r=r,
+                               kappa=calibrated_params["kappa"],
+                               v0=calibrated_params["v0"],
+                               theta=calibrated_params["theta"],
+                               sigma=calibrated_params["sigma"],
+                               rho=calibrated_params["rho"]).plot_IV_surface()
 
         # print("IMPLICIT VOLATILITY SMILE (CALLS VANILLE)")
         # print("=" * 50 + "\n")

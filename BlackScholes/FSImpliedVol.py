@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from BlackScholes.VanillaBlackScholes import VanillaBlackScholes, implied_vol
 from HestonModel.Vanilla import VanillaHestonPrice
 import torch
+from mpl_toolkits.mplot3d import Axes3D  # pour les graphs 3D
+from matplotlib import cm  # pour les colormaps
 
 class ImpliedVolCalculatorFS:
     def __init__(self, S0, k_values, T0, T1, T2, r, kappa, v0, theta, sigma, rho):
@@ -108,4 +110,53 @@ class ImpliedVolCalculatorFS:
         plt.gca().tick_params(colors='black')
 
         # Affichage
+        plt.show()
+
+    def plot_IV_surface(self, T_values=None, num_strikes=100):
+        """
+        Affiche la surface de volatilité implicite (IV) en fonction du strike (k) et de la maturité T2.
+
+        :param T_values: Liste des maturités T2 à tester
+        :param num_strikes: Nombre de strikes à générer (défaut : 100)
+        """
+        k_values = np.linspace(0.4, 1.6, num_strikes).tolist()
+
+        if T_values is None:
+            T_values = [1.4, 1.8, 2.0, 2.5, 3.0, 4.0]
+
+        # Préparer les matrices pour la surface
+        K_mesh, T_mesh = np.meshgrid(k_values, T_values)
+        IV_surface = np.zeros_like(K_mesh)
+
+        for i, T in enumerate(T_values):
+            IV_T = ImpliedVolCalculatorFS(
+                S0=self.S0,
+                k_values=k_values,
+                T0=self.T0,
+                T1=self.T1,
+                T2=[T] * len(k_values),
+                r=self.r,
+                kappa=self.kappa,
+                v0=self.v0,
+                theta=self.theta,
+                sigma=self.sigma,
+                rho=self.rho
+            ).FSImpliedVol()
+
+            IV_surface[i, :] = IV_T
+
+        # Tracer la surface
+        fig = plt.figure(figsize=(14, 9))
+        ax = fig.add_subplot(111, projection='3d')
+
+        surf = ax.plot_surface(K_mesh, T_mesh, IV_surface, cmap=cm.viridis, edgecolor='none', alpha=0.9)
+
+        ax.set_xlabel('Strike (k)', fontsize=12)
+        ax.set_ylabel('Maturity $T_2$', fontsize=12)
+        ax.set_zlabel('Implied Volatility (IV)', fontsize=12)
+        ax.set_title('Implied Volatility Surface - Heston Forward Start Options', fontsize=14)
+
+        fig.colorbar(surf, shrink=0.5, aspect=10, label='Implied Vol')
+
+        plt.tight_layout()
         plt.show()

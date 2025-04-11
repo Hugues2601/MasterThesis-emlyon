@@ -266,6 +266,16 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+pastel_colors = [
+    "black",        # utilisé pour la première paire
+    "#8fbcbb",      # bleu-vert clair
+    "#a3be8c",      # vert pastel
+    "#d08770",      # orange pastel
+    "#e09ec7",      # rose
+    "#b48ead"       # violet pastel
+]
+
+
 def plot_forward_start_vs_vanilla_price_multi_maturity(
     S0,
     k_range,  # valeurs de k entre 0.6 et 1.4 typiquement
@@ -274,15 +284,19 @@ def plot_forward_start_vs_vanilla_price_multi_maturity(
 ):
     # Définir les différentes maturités
     maturities = [
-        (0.0, 0.5, 1.0, .5),
+        (1.75, 2.0, 2.5, .5),
         (0.0, 0.75, 1.5, .75),
         (0.0, 1.0, 2.0, 1.0)
     ]
 
-    # Couleurs pour chaque paire de maturité
-    colors = ['tab:blue', 'tab:orange', 'tab:green']
+    # Utiliser les couleurs définies
+    color_pairs = [
+        (pastel_colors[0], pastel_colors[0]),
+        (pastel_colors[2], pastel_colors[2]),
+        (pastel_colors[3], pastel_colors[3])
+    ]
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(10, 5))
 
     for idx, (T0, T1, T2, T_vanilla) in enumerate(maturities):
         fs_prices = []
@@ -323,19 +337,75 @@ def plot_forward_start_vs_vanilla_price_multi_maturity(
             vanilla_price = model_vanilla.heston_price().item()
             vanilla_prices.append(vanilla_price)
 
-        label_fs = f"Forward Start T1={T1}, T2={T2}"
+        label_fs = f"Forward Start t1={T1}, t2={T2}"
         label_vanilla = f"Vanilla T={T_vanilla}"
 
-        plt.plot(k_range, fs_prices, label=label_fs, linewidth=2, color=colors[idx])
-        plt.plot(k_range, vanilla_prices, label=label_vanilla, linewidth=2, linestyle='--', color=colors[idx])
+        fs_color, vanilla_color = color_pairs[idx]
 
-    plt.xlabel("k (Strike Coefficient)", fontsize=13)
+        plt.plot(k_range, fs_prices, label=label_fs, linewidth=2, color=fs_color)
+        plt.plot(k_range, vanilla_prices, label=label_vanilla, linewidth=2, linestyle='--', color=vanilla_color)
+
+    # Axes
+    plt.xlabel("k (Strike Coefficient for FS — Moneyness for Vanilla)", fontsize=13)
     plt.ylabel("Option Price", fontsize=13)
-    plt.title("Forward Start vs Vanilla Option Prices under Heston Model", fontsize=15)
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+
+
+
+def plot_forward_start_price_t0_variation(
+    S0,
+    k_range,  # ex: np.linspace(0.6, 1.4, 50)
+    r,
+    kappa, v0, theta, sigma, rho
+):
+    # Valeurs fixes pour T1 et T2
+    T1 = 2.0
+    T2 = 3.0
+
+    # Valeurs de T0 à tester
+    T0_values = [0.0, 0.5, 1.0, 1.75]
+
+    # Couleurs personnalisées si tu veux
+    colors = pastel_colors[:4]  # ou mets ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'] par exemple
+
+    plt.figure(figsize=(10, 5))
+
+    for idx, T0 in enumerate(T0_values):
+        fs_prices = []
+
+        for k in k_range:
+            model_fs = ForwardStart(
+                S0=S0,
+                k=k,
+                T0=T0,
+                T1=T1,
+                T2=T2,
+                r=r,
+                kappa=kappa,
+                v0=v0,
+                theta=theta,
+                sigma=sigma,
+                rho=rho
+            )
+            fs_price = model_fs.heston_price().item()
+            fs_prices.append(fs_price)
+
+        label = f"FS Option (T0={T0}, T1={T1}, T2={T2})"
+        plt.plot(k_range, fs_prices, label=label, linewidth=2, color=colors[idx])
+
+    # Axes
+    plt.xlabel("k (Strike Coefficient at T1)", fontsize=13)
+    plt.ylabel("Forward Start Option Price", fontsize=13)
+    plt.title("Forward Start Option Prices for Varying T0", fontsize=14)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
 
 
 

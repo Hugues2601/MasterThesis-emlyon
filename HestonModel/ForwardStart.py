@@ -1,5 +1,6 @@
 import torch
 from HestonModel.HestonModelSuperClass import HestonModel
+from HestonModel.Vanilla import VanillaHestonPrice
 from config import CONFIG
 import matplotlib.pyplot as plt
 import numpy as np
@@ -257,3 +258,84 @@ class ForwardStart(HestonModel):
         # Faire varier rho de -0.9 à 0.9
         rho_range = np.linspace(-0.9, 0.9, 500)
         fs_option.sensitivity_analysis("rho", rho_range)
+
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+def plot_forward_start_vs_vanilla_price_multi_maturity(
+    S0,
+    k_range,  # valeurs de k entre 0.6 et 1.4 typiquement
+    r,
+    kappa, v0, theta, sigma, rho
+):
+    # Définir les différentes maturités
+    maturities = [
+        (0.0, 0.5, 1.0, .5),
+        (0.0, 0.75, 1.5, .75),
+        (0.0, 1.0, 2.0, 1.0)
+    ]
+
+    # Couleurs pour chaque paire de maturité
+    colors = ['tab:blue', 'tab:orange', 'tab:green']
+
+    plt.figure(figsize=(10, 6))
+
+    for idx, (T0, T1, T2, T_vanilla) in enumerate(maturities):
+        fs_prices = []
+        vanilla_prices = []
+
+        for k in k_range:
+            # --- Forward Start Pricing ---
+            model_fs = ForwardStart(
+                S0=S0,
+                k=k,
+                T0=T0,
+                T1=T1,
+                T2=T2,
+                r=r,
+                kappa=kappa,
+                v0=v0,
+                theta=theta,
+                sigma=sigma,
+                rho=rho
+            )
+            fs_price = model_fs.heston_price().item()
+            fs_prices.append(fs_price)
+
+            # --- Vanilla Pricing ---
+            K_vanilla = S0 * k
+            model_vanilla = VanillaHestonPrice(
+                S0=S0,
+                K=K_vanilla,
+                T=T_vanilla,
+                r=r,
+                kappa=kappa,
+                v0=v0,
+                theta=theta,
+                sigma=sigma,
+                rho=rho,
+                type="call"
+            )
+            vanilla_price = model_vanilla.heston_price().item()
+            vanilla_prices.append(vanilla_price)
+
+        label_fs = f"Forward Start T1={T1}, T2={T2}"
+        label_vanilla = f"Vanilla T={T_vanilla}"
+
+        plt.plot(k_range, fs_prices, label=label_fs, linewidth=2, color=colors[idx])
+        plt.plot(k_range, vanilla_prices, label=label_vanilla, linewidth=2, linestyle='--', color=colors[idx])
+
+    plt.xlabel("k (Strike Coefficient)", fontsize=13)
+    plt.ylabel("Option Price", fontsize=13)
+    plt.title("Forward Start vs Vanilla Option Prices under Heston Model", fontsize=15)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+

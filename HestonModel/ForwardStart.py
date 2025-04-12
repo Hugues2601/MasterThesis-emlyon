@@ -147,28 +147,37 @@ class ForwardStart(HestonModel):
             "vega": self.v0,
             "rho": self.r,
             "theta": self.T0,
-            "gamma": (self.S0, self.S0),  # d²V/dS0²
-            "vanna": (self.S0, self.v0),  # d²V/dS0 dv0
-            "vomma": (self.v0, self.v0),  # d²V/dv0²
+            "gamma": (self.S0, self.S0),
+            "vanna": (self.S0, self.v0),
+            "volga": self.v0,
         }
 
         variable = greeks[greek_name]
         price = self.heston_price()
 
         if batch:
-            price = price.sum()  # Ensure a scalar output for batch mode
+            price = price.sum()
 
-        if isinstance(variable, tuple):  # Second-order Greeks (Gamma, Vanna, Vomma)
+        if greek_name == "volga":
+            first_derivative, = torch.autograd.grad(price, self.v0, create_graph=True)
+            second_derivative, = torch.autograd.grad(first_derivative.sum() if batch else first_derivative, self.v0)
+            volga = 2 * first_derivative + 4 * self.v0 * second_derivative
+            return volga if batch else volga.item()
+
+        if isinstance(variable, tuple):
             var1, var2 = variable
             first_derivative, = torch.autograd.grad(price, var1, create_graph=True)
-
-
             second_derivative, = torch.autograd.grad(first_derivative.sum() if batch else first_derivative, var2)
-
             return second_derivative if batch else second_derivative.item()
-        else:  # First-order Greeks (Delta, Vega, Rho, Theta)
-            first_derivative, = torch.autograd.grad(price, variable)
-            return first_derivative if batch else first_derivative.item()
+
+        else:
+            derivative, = torch.autograd.grad(price, variable)
+
+            if greek_name == "vega":
+                adjusted_vega =2 * torch.sqrt(self.v0) * derivative
+                return adjusted_vega if batch else adjusted_vega.item()
+
+            return derivative if batch else derivative.item()
 
     def sensitivity_analysis(self, param_name, param_range):
         """

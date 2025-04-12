@@ -59,32 +59,54 @@ class ImpliedVolCalculatorFS:
 
         return torch.exp(theta).detach().cpu().numpy()
 
-    def plot_IV_smile(self, T_values=None, num_strikes=100):
+    def plot_IV_smile(self, num_strikes=100):
         """
-        Génère et affiche le graphique de l'IV en fonction des strikes pour différentes maturités.
-
-        :param T_values: Liste des maturités T2 à tester
-        :param num_strikes: Nombre de strikes à générer (défaut : 500)
+        Trace les implied volatilities de Forward Start options pour différents couples (T0, T1, T2),
+        avec couleurs pastel et courbe T0=0.5 en noir pointillé.
         """
-        k_values = np.linspace(0.4, 1.6, num_strikes).tolist()
 
-        if T_values is None:
-            T_values = [1.4, 1.8, 2.0, 2.5, 3, 4]
+        import matplotlib.pyplot as plt
+        import numpy as np
 
+        k_values = np.linspace(0.6, 1.4, num_strikes).tolist()
 
-        plt.figure(figsize=(12, 8))
+        # Triplets dans l'ordre souhaité (les T1=0.75 sont à la fin)
+        maturity_triplets = [
+            (0.0, 0.5, 1.0),  # turquoise
+            (0.0, 1.0, 2.0),  # orange
+            (0.5, 1.0, 2.0),  # noir pointillé
+            (0.0, 0.75, 1.5),  # vert
+            (0.0, 0.75, 2.0),  # rose
+            (0.0, 0.75, 2.5),  # lavande
+        ]
 
-        # Définir un fond gris
-        plt.gca().set_facecolor('#e6e6e6')
-        plt.gca().grid(True, color='white', linestyle='--', linewidth=0.7, alpha=0.8)
+        pastel_colors = [
+            "#8fbcbb",  # turquoise
+            "#d08770",  # orange
+            "black",  # noir
+            "#a3be8c",  # vert
+            "#e09ec7",  # rose
+            "#b48ead"  # lavande
+        ]
 
-        for T in T_values:
+        linestyles = [
+            '-', '-', '--', '-', '-', '-'
+        ]
+
+        # Setup du plot
+        plt.figure(figsize=(12, 6))
+        ax = plt.gca()
+        ax.set_facecolor('white')
+        ax.grid(True, color='gray', linestyle='--', linewidth=0.6, alpha=0.7)
+
+        # Tracé des courbes
+        for i, (T0, T1, T2) in enumerate(maturity_triplets):
             IV_T = ImpliedVolCalculatorFS(
                 S0=self.S0,
                 k_values=k_values,
-                T0=self.T0,
-                T1=self.T1,
-                T2=[T] * len(k_values),  # Liste de T2 de même longueur que k_values
+                T0=T0,
+                T1=T1,
+                T2=[T2] * len(k_values),
                 r=self.r,
                 kappa=self.kappa,
                 v0=self.v0,
@@ -93,23 +115,28 @@ class ImpliedVolCalculatorFS:
                 rho=self.rho
             ).FSImpliedVol()
 
-            plt.plot(k_values, IV_T, label=f'T2-T1 = {round(T-self.T1, 1)}', linewidth=2)
+            label = f"T0={T0}, T1={T1}, T2={T2}"
+            ax.plot(
+                k_values,
+                IV_T,
+                label=label,
+                color=pastel_colors[i],
+                linestyle=linestyles[i],
+                linewidth=2
+            )
 
-        # Personnalisation du graphique
-        plt.xlabel('Strike (k)', fontsize=14)
-        plt.ylabel('Implied Volatility (IV)', fontsize=14)
-        plt.title('Forward Start Heston Calls - Implied Volatility for Different Maturities (T)', fontsize=14)
-        plt.legend(fontsize=12, loc='upper left', bbox_to_anchor=(1,1))
+        # Axes et légende
+        ax.set_xlabel('Strike (k)', fontsize=14)
+        ax.set_ylabel('Implied Volatility (IV)', fontsize=14)
+        ax.legend(fontsize=12, loc='upper right', frameon=True, facecolor='white', edgecolor='gray')
+
+        # Bordures noires autour du graphique
+        for spine in ax.spines.values():
+            spine.set_visible(True)
+            spine.set_color('black')
+            spine.set_linewidth(1)
+
         plt.tight_layout()
-
-        # Amélioration des bordures du graphique
-        plt.gca().spines['top'].set_visible(False)
-        plt.gca().spines['right'].set_visible(False)
-        plt.gca().spines['left'].set_color('#4f4f4f')
-        plt.gca().spines['bottom'].set_color('#4f4f4f')
-        plt.gca().tick_params(colors='black')
-
-        # Affichage
         plt.show()
 
     def plot_IV_surface(self, T_values=None, num_strikes=100):

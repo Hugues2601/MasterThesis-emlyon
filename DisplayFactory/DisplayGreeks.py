@@ -27,7 +27,7 @@ class DisplayGreeks(DisplayManager):
         import matplotlib.pyplot as plt
         from matplotlib.lines import Line2D
 
-        greeks = ["delta", "vega", "theta", "vanna", "volga"]
+        greeks = ["delta", "vega", "theta", "vanna", "volga", "gamma"]
         maturities = [
             (0.0, 0.5, 1.0),   # noir
             (0.0, 0.75, 1.5),  # rouge
@@ -67,6 +67,9 @@ class DisplayGreeks(DisplayManager):
         plt.show()
 
 
+
+
+
 # calibrated_params = {
 #         'kappa': 2.41300630569458,
 #         'v0': 0.029727613553404808,
@@ -74,6 +77,17 @@ class DisplayGreeks(DisplayManager):
 #         'sigma': 0.3084869682788849,
 #         'rho': -0.8905978202819824
 #     }
+#
+# DisplayGreeks(S0=5667.65,
+#               r=0.03927,
+#               kappa=calibrated_params["kappa"],
+#               v0=calibrated_params["v0"],
+#               theta=calibrated_params["theta"],
+#               sigma=calibrated_params["sigma"],
+#               rho=calibrated_params["rho"]).display()
+
+
+
 # calibrated_params = {
 #     'kappa': 2.41300630569458,
 #     'v0': 0.029727613553404808,

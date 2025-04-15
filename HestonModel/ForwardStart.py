@@ -147,7 +147,7 @@ class ForwardStart(HestonModel):
             "vega": self.v0,
             "rho": self.r,
             "theta": self.T0,
-            "gamma": (self.S0, self.S0),
+            "gamma": self.S0,
             "vanna": (self.S0, self.v0),
             "volga": self.v0,
         }

@@ -20,7 +20,6 @@ class HestonModel(ABC):
     def _heston_cf(self, phi):
         pass
 
-
     def _compute_integrals(self):
 
         # Vérification de la taille de K et T

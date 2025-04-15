@@ -202,72 +202,88 @@ class ForwardStart(HestonModel):
         plt.grid()
         plt.show()
 
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import torch
+
     def sensitivity_analysis_all(self, S0, r, calibrated_params):
-        fs_option = ForwardStart(S0=S0, k=0.75, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
-                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
+        """
+        Affiche les sensibilités du prix de l'option Forward Start à plusieurs paramètres du modèle de Heston,
+        avec 5 subplots (3 colonnes x 2 lignes), 3 courbes par subplot (3 maturités),
+        une légende globale dans la cellule vide, et une bordure noire autour de chaque subplot.
+        """
 
-        kappa_range = np.linspace(0.05, 4, 500)
-        fs_option.sensitivity_analysis("kappa", kappa_range)
+        # Paramètres et labels LaTeX
+        param_info = {
+            "kappa": (np.linspace(0.05, 4, 300), r"$\kappa$"),
+            "v0": (np.linspace(0.01, 0.2, 300), r"$v_0$"),
+            "theta": (np.linspace(0.01, 0.2, 300), r"$\theta$"),
+            "sigma": (np.linspace(0.1, 1.0, 300), r"$\sigma$"),
+            "rho": (np.linspace(-0.9, 0.9, 300), r"$\rho$"),
+        }
 
-        v0_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("v0", v0_range)
+        # Maturités et styles associés
+        maturities = [
+            (0.5, 1.0, 'black', r"$T_1=0.5,\ T_2=1.0$"),
+            (0.75, 1.5, '#d08770', r"$T_1=0.75,\ T_2=1.5$"),
+            (1.0, 2.0, '#8fbcbb', r"$T_1=1.0,\ T_2=2.0$"),
+        ]
 
-        # Faire varier theta de 0.01 à 0.2
-        theta_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("theta", theta_range)
+        fig, axs = plt.subplots(2, 3, figsize=(18, 10))
+        axs = axs.flatten()
 
-        # Faire varier sigma de 0.1 à 1.0
-        sigma_range = np.linspace(0.1, 1.0, 500)
-        fs_option.sensitivity_analysis("sigma", sigma_range)
+        for idx, (param_name, (param_range, latex_label)) in enumerate(param_info.items()):
+            ax = axs[idx]
 
-        # Faire varier rho de -0.9 à 0.9
-        rho_range = np.linspace(-0.9, 0.9, 500)
-        fs_option.sensitivity_analysis("rho", rho_range)
+            for T1, T2, color, label in maturities:
+                prices = []
 
-        # Exemple d'utilisation (en gardant les autres paramètres fixes)
-        fs_option = ForwardStart(S0=S0, k=1.0, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
-                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
+                fs_option = ForwardStart(
+                    S0=S0,
+                    k=1.0,
+                    T0=0.0,
+                    T1=T1,
+                    T2=T2,
+                    r=r,
+                    kappa=calibrated_params["kappa"],
+                    v0=calibrated_params["v0"],
+                    theta=calibrated_params["theta"],
+                    sigma=calibrated_params["sigma"],
+                    rho=calibrated_params["rho"]
+                )
 
-        kappa_range = np.linspace(0.05, 4, 500)
-        fs_option.sensitivity_analysis("kappa", kappa_range)
+                for value in param_range:
+                    setattr(fs_option, param_name, torch.tensor(value, device=CONFIG.device, dtype=torch.float32))
+                    price = fs_option.heston_price().item()
+                    prices.append(price)
 
-        v0_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("v0", v0_range)
+                ax.plot(param_range, prices, color=color, label=label)
 
-        # Faire varier theta de 0.01 à 0.2
-        theta_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("theta", theta_range)
+            ax.set_title(f"Impact of {latex_label}", fontsize=14)
+            ax.set_xlabel(latex_label, fontsize=12)
+            ax.set_ylabel("Option Price", fontsize=12)
+            ax.grid(True)
 
-        # Faire varier sigma de 0.1 à 1.0
-        sigma_range = np.linspace(0.1, 1.0, 500)
-        fs_option.sensitivity_analysis("sigma", sigma_range)
+            # Encadrer chaque subplot avec une bordure noire
+            for spine in ax.spines.values():
+                spine.set_edgecolor('black')
+                spine.set_linewidth(1.5)
 
-        # Faire varier rho de -0.9 à 0.9
-        rho_range = np.linspace(-0.9, 0.9, 500)
-        fs_option.sensitivity_analysis("rho", rho_range)
+        # Légende dans la dernière cellule vide
+        legend_ax = axs[-1]
+        legend_ax.axis('off')
+        handles, labels = axs[0].get_legend_handles_labels()
+        legend_ax.legend(
+            handles,
+            labels,
+            loc='center',
+            fontsize=16,
+            handlelength=4,
+            handletextpad=3
+        )
 
-        # Exemple d'utilisation (en gardant les autres paramètres fixes)
-        fs_option = ForwardStart(S0=S0, k=1.25, T0=0.0, T1=1.0, T2=3.0, r=r, kappa=calibrated_params["kappa"], v0=calibrated_params["v0"], theta=calibrated_params["theta"],
-                                 sigma=calibrated_params["sigma"], rho=calibrated_params["rho"])
-
-        kappa_range = np.linspace(0.05, 4, 500)
-        fs_option.sensitivity_analysis("kappa", kappa_range)
-
-        v0_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("v0", v0_range)
-
-        # Faire varier theta de 0.01 à 0.2
-        theta_range = np.linspace(0.01, 0.2, 500)
-        fs_option.sensitivity_analysis("theta", theta_range)
-
-        # Faire varier sigma de 0.1 à 1.0
-        sigma_range = np.linspace(0.1, 1.0, 500)
-        fs_option.sensitivity_analysis("sigma", sigma_range)
-
-        # Faire varier rho de -0.9 à 0.9
-        rho_range = np.linspace(-0.9, 0.9, 500)
-        fs_option.sensitivity_analysis("rho", rho_range)
-
+        plt.tight_layout(rect=[0, 0, 1, 1])
+        plt.show()
 
 
 import matplotlib.pyplot as plt

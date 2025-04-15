@@ -1,17 +1,19 @@
-# %%
-"""
-Created on Jan 2 2019
-The Heston model and pricing of forward start options
-@author: Lech A. Grzelak
-"""
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.stats as st
-import enum
-import scipy.optimize as optimize
 import yfinance as yf
-import time
+import matplotlib.pyplot as plt
 
-stock = yf.Ticker("TSLA")
-spot_price = stock.history(period="1d")['Close'].iloc[-1]
-print(spot_price)
+# Télécharger les données du VIX
+vix = yf.download("^VIX", start="2006-01-01", end="2023-01-01")
+
+# Créer le graphique
+plt.figure(figsize=(10, 5))
+plt.plot(vix.index, vix["Close"], color="black")
+
+# Améliorations des polices
+plt.xlabel("Year", fontsize=16)
+plt.ylabel("VIX Value", fontsize=16)
+plt.xticks(fontsize=16)
+plt.yticks(fontsize=16)
+
+plt.grid(True)
+plt.tight_layout()
+plt.show()

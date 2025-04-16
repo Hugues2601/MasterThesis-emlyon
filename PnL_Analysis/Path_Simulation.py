@@ -39,17 +39,7 @@ class HestonSimulator:
         sigma = torch.full((n_paths,), self.sigma, device=self.device)
 
         for i in range(1, self.n_steps):
-            # AR(1) update avec clamping
-            kappa = kappa + 0.1 * (self.kappa - kappa) + 0.05 * torch.randn(n_paths, device=self.device)
-            theta = theta + 0.05 * (self.theta - theta) + 0.005 * torch.randn(n_paths, device=self.device)
-            sigma = sigma + 0.1 * (self.sigma - sigma) + 0.02 * torch.randn(n_paths, device=self.device)
-
-            kappa = torch.clamp(kappa, min=1e-4, max=10)
-            theta = torch.clamp(theta, min=1e-4, max=1)
-            sigma = torch.clamp(sigma, min=1e-4, max=5)
-
-            # Racine de v (clamp pour éviter NaN)
-            v_prev_clamped = torch.clamp(v[:, i - 1], min=1e-8)
+            v_prev_clamped = torch.clamp(v[:, i - 1], min=1e-4)
             sqrt_v = torch.sqrt(v_prev_clamped)
 
             # Update S
@@ -59,12 +49,14 @@ class HestonSimulator:
             v[:, i] = v[:, i - 1] + kappa * (theta - v[:, i - 1]) * self.dt + sigma * sqrt_v * dW_v[:, i - 1]
 
             # Clamp v après update
-            v[:, i] = torch.clamp(v[:, i], min=1e-8)
+            v[:, i] = torch.clamp(v[:, i], min=1e-4)
+
+        # Masque : chemins valides = aucune variance égale ou inférieure à 1e-4
 
         return S, v, dt_tensor
 
 
-    def plot_paths(self, S, v, num_paths=1000):
+    def plot_paths(self, S, v, num_paths=500):
         """
         Affiche les trajectoires simulées pour S et v.
 
@@ -73,27 +65,54 @@ class HestonSimulator:
         - v (torch.Tensor): Matrice des variances simulées (n_paths, n_steps).
         - num_paths (int): Nombre de chemins à afficher pour une meilleure lisibilité.
         """
+        import matplotlib.pyplot as plt
+        import torch
+
+        # Palette pastel
+        pastel_colors = [
+            "#a3be8c",  # green
+            "#d08770",  # orange
+            "#8fbcbb",  # cyan
+            "#b48ead",  # purple
+            "#e5c07b",  # yellow
+            "#81a1c1",  # blue
+            "#88c0d0",  # light blue
+            "#bf616a",  # red
+            "#5e81ac",  # deep blue
+            "#ebcb8b",  # sand
+            "#caa9fa",  # soft violet
+            "#98c379",  # bright green
+            "#e06c75",  # red-pink
+            "#56b6c2",  # turquoise
+            "#c678dd",  # pinkish purple
+        ]
+
         S_cpu, v_cpu = S[:num_paths].cpu().numpy(), v[:num_paths].cpu().numpy()
         time_grid = torch.linspace(0, self.T, steps=self.n_steps).cpu().numpy()
+
 
         # Graphique des prix S_t
         plt.figure(figsize=(12, 5))
         for i in range(num_paths):
-            plt.plot(time_grid, S_cpu[i], alpha=0.6)
-        plt.title(f"Simulated Heston Price Paths ({num_paths} paths)")
+            color = pastel_colors[i % len(pastel_colors)]
+            plt.plot(time_grid, S_cpu[i], color=color, alpha=0.8)
+        plt.title(f"Simulated Heston Price Paths")
         plt.xlabel("Time (Years)")
-        plt.ylabel("Stock Price S_t")
-        plt.grid()
+        plt.ylabel("Stock Price $S_t$")
+        plt.grid(alpha=0.3)
+        plt.tight_layout()
         plt.show()
 
         # Graphique des variances v_t
         plt.figure(figsize=(12, 5))
         for i in range(num_paths):
-            plt.plot(time_grid, v_cpu[i], alpha=0.6)
+            color = pastel_colors[i % len(pastel_colors)]
+            plt.plot(time_grid, v_cpu[i], color=color, alpha=0.8)
         plt.title(f"Simulated Heston Variance Paths ({num_paths} paths)")
         plt.xlabel("Time (Years)")
-        plt.ylabel("Variance v_t")
-        plt.grid()
+        plt.ylabel("Variance $v_t$")
+        plt.grid(alpha=0.3)
+        plt.tight_layout()
         plt.show()
 
 
@@ -110,7 +129,7 @@ def pnl_analysis(S0, k, r, kappa, v0, theta, sigma, rho, T0, T1, T2):
 
 
 
-    explained_pnl = forward_start.compute_explained_pnl(S_paths, v_paths, t=100, dt=1/252, dt_path=dt_path)
+    explained_pnl = forward_start.compute_explained_pnl(S_paths, v_paths, t=1, dt=1/252, dt_path=dt_path)
 
     pnl_inex = pnl_tot - explained_pnl
 

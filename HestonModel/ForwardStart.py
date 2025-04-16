@@ -78,7 +78,7 @@ class ForwardStart(HestonModel):
                                        r=self.r, kappa=self.kappa, v0=v_t, theta=self.theta,
                                        sigma=self.sigma, rho=self.rho)
 
-        forward_start_t1 = ForwardStart(S0=S_t1, k=self.k, T0=self.T0 - 1/252, T1=self.T1 - 1/252, T2=self.T2 - 1/252,
+        forward_start_t1 = ForwardStart(S0=S_t1, k=self.k, T0=self.T0, T1=self.T1 - 1/252, T2=self.T2 - 1/252,
                                         r=self.r, kappa=self.kappa, v0=v_t1, theta=self.theta,
                                         sigma=self.sigma, rho=self.rho)
 
@@ -121,23 +121,31 @@ class ForwardStart(HestonModel):
                                        r=self.r, kappa=self.kappa, v0=v_t, theta=self.theta,
                                        sigma=self.sigma, rho=self.rho)
 
+        forward_start_t_special = ForwardStart(S0=S_t, k=self.k, T0=T0_t, T1=self.T1, T2=self.T2,
+                                       r=self.r, kappa=self.kappa, v0=self.v0, theta=self.theta,
+                                       sigma=self.sigma, rho=self.rho)
+
         # Calculer le prix de l'option à t
         price_t = forward_start_t.heston_price()
 
         # Calcul des Grecs
         delta = forward_start_t.compute_greek("delta", batch=True)
         vega = forward_start_t.compute_greek("vega", batch=True)
-        # vanna = forward_start_t.compute_greek("vanna", batch=True)
-        # vomma = forward_start_t.compute_greek("vomma", batch=True)
+        vanna = forward_start_t.compute_greek("vanna", batch=True)
+        volga = forward_start_t.compute_greek("volga", batch=True)
         theta = forward_start_t.compute_greek("theta", batch=True)
 
         # Calcul des variations des variables
         dS = S_t1 - S_t
         dv = v_t1 - v_t
         dT = 1/252
+        print("min vega", torch.min(vega))
+        print("max vega", torch.max(vega))
+        print("min vega*dv", torch.min(vega*dv))
+        print("max vega*dv", torch.max(vega*dv))
 
         # explained_pnl = delta * dS + vega * dv + theta * dT + 0.5 * vanna * dS * dv + 0.5 * vomma * dv**2
-        explained_pnl = delta * dS + vega * dv + theta * dT
+        explained_pnl = delta * dS + theta * dT + vega * dv
 
         return explained_pnl
 

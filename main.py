@@ -168,100 +168,185 @@ def run(args):
         #                             sigma=calibrated_params["sigma"],
         #                             rho=calibrated_params["rho"]).plot_IV_smile()
 
-        def plot_combined_IV_smiles(S0, r, kappa, v0, theta, sigma, rho, num_strikes=100):
-            """
-            Trace les implied volatilities :
-            - Forward Start (HestonFS inversé dans BSFS)
-            - Forward Vanilla (calculée via la formule forward vol entre t1 et t2)
+        """DEBUT DE SMILE"""
 
-            Vanilla "forward" : σ²_fwd = [σ²(t2) * t2 - σ²(t1) * t1] / (t2 - t1)
-            """
+        # def plot_forward_IV_comparison(S0, r, kappa, v0, theta, sigma, rho, num_strikes=100):
+        #     """
+        #     Compare deux approches de volatilité implicite pour les options forward start :
+        #     - Forward Start (HestonFS inversé dans BSFS)
+        #     - Forward Vanilla (calculée via la formule forward vol entre T1 et T2)
+        #
+        #     Formule utilisée :
+        #     σ²_fwd(K) = [σ²(T₂, K) * T₂ - σ²(T₁, K) * T₁] / (T₂ - T₁)
+        #     """
+        #
+        #     import numpy as np
+        #     import matplotlib.pyplot as plt
+        #
+        #     k_values = np.linspace(0.6, 1.4, num_strikes).tolist()
+        #
+        #     maturity_triplets = [
+        #         (0.0, 1.0, 1.5),  # bleu
+        #         (0.0, 1.0, 3.0),  # vert
+        #         (0.0, 0.5, 2.0),  # orange
+        #     ]
+        #
+        #     pastel_colors = ["black", "#d08770", "#8fbcbb"]
+        #     linestyles_fs = ['-'] * len(maturity_triplets)
+        #     linestyles_fwd = [':'] * len(maturity_triplets)
+        #
+        #     plt.figure(figsize=(14, 7))
+        #     ax = plt.gca()
+        #     ax.set_facecolor('white')
+        #     ax.grid(True, color='gray', linestyle='--', linewidth=0.6, alpha=0.7)
+        #
+        #     for i, (T0, T1, T2) in enumerate(maturity_triplets):
+        #         T1_list = [T1] * len(k_values)
+        #         T2_list = [T2] * len(k_values)
+        #
+        #         # ----- Forward Start IV (vraie option FS)
+        #         IV_FS = ImpliedVolCalculatorFS(
+        #             S0=S0, k_values=k_values, T0=T0, T1=T1, T2=T2_list, r=r,
+        #             kappa=kappa, v0=v0, theta=theta, sigma=sigma, rho=rho
+        #         ).FSImpliedVol()
+        #
+        #         # ----- Vanilla vols pour T1 et T2
+        #         vanilla_strikes = [k * S0 for k in k_values]
+        #
+        #         IV_T1 = ImpliedVolCalculatorVanilla(
+        #             S0=S0, k_values=vanilla_strikes, T=T1_list, r=r,
+        #             kappa=kappa, v0=v0, theta=theta, sigma=sigma, rho=rho
+        #         ).VanillaImpliedVol()
+        #
+        #         IV_T2 = ImpliedVolCalculatorVanilla(
+        #             S0=S0, k_values=vanilla_strikes, T=T2_list, r=r,
+        #             kappa=kappa, v0=v0, theta=theta, sigma=sigma, rho=rho
+        #         ).VanillaImpliedVol()
+        #
+        #         # ----- Forward Vanilla vol via formule
+        #         IV_ForwardVanilla = [
+        #             np.sqrt((iv2 ** 2 * T2 - iv1 ** 2 * T1) / (T2 - T1))
+        #             for iv1, iv2 in zip(IV_T1, IV_T2)
+        #         ]
+        #
+        #         # ----- Traces
+        #         label_fs = f"Forward Start (Heston) [T1={T1}, T2={T2}]"
+        #         label_fwd = f"Forward Vanilla (formula) [T1={T1}, T2={T2}]"
+        #
+        #         ax.plot(
+        #             k_values, IV_FS, label=label_fs,
+        #             color=pastel_colors[i], linestyle=linestyles_fs[i], linewidth=2
+        #         )
+        #         ax.plot(
+        #             k_values, IV_ForwardVanilla, label=label_fwd,
+        #             color=pastel_colors[i], linestyle=linestyles_fwd[i], linewidth=2
+        #         )
+        #
+        #     ax.set_xlabel('k (Strike Coefficient for FS - Moneyness for Vanilla', fontsize=14)
+        #     ax.set_ylabel('Implied Volatility (IV)', fontsize=14)
+        #     ax.set_title('Forward Start IV (Heston) vs Forward Vanilla IV (formula)', fontsize=15)
+        #     ax.legend(fontsize=10, loc='upper right', frameon=True, facecolor='white', edgecolor='gray')
+        #
+        #     for spine in ax.spines.values():
+        #         spine.set_visible(True)
+        #         spine.set_color('black')
+        #         spine.set_linewidth(1)
+        #
+        #     plt.tight_layout()
+        #     plt.show()
+        #
+        # plot_forward_IV_comparison(
+        #     S0=S0,
+        #     r=r,
+        #     kappa=calibrated_params['kappa'],
+        #     v0=calibrated_params['v0'],
+        #     theta=calibrated_params['theta'],
+        #     sigma=calibrated_params['sigma'],
+        #     rho=calibrated_params['rho'],
+        # )
+        #
+        # def plot_vanilla_IV_T1_T2(S0, r, kappa, v0, theta, sigma, rho, num_strikes=100):
+        #     """
+        #     Affiche uniquement les implied volatilities vanilla pour T1 et T2
+        #     afin d’analyser leur forme avant calcul de la forward implied vol.
+        #     """
+        #
+        #     import numpy as np
+        #     import matplotlib.pyplot as plt
+        #
+        #     k_values = np.linspace(0.6, 1.4, num_strikes).tolist()
+        #
+        #     maturity_triplets = [
+        #         (0.0, 0.5, 1.0),  # bleu
+        #         (0.0, 0.75, 1.5),  # vert
+        #         (0.0, 1.0, 2.0),  # orange
+        #     ]
+        #
+        #     pastel_colors = ["#8fbcbb", "#a3be8c", "#d08770"]
+        #     linestyles_T1 = ['--'] * len(maturity_triplets)
+        #     linestyles_T2 = ['-'] * len(maturity_triplets)
+        #
+        #     plt.figure(figsize=(14, 7))
+        #     ax = plt.gca()
+        #     ax.set_facecolor('white')
+        #     ax.grid(True, color='gray', linestyle='--', linewidth=0.6, alpha=0.7)
+        #
+        #     for i, (T0, T1, T2) in enumerate(maturity_triplets):
+        #         T1_list = [T1] * len(k_values)
+        #         T2_list = [T2] * len(k_values)
+        #
+        #         vanilla_strikes = [k * S0 for k in k_values]
+        #
+        #         IV_T1 = ImpliedVolCalculatorVanilla(
+        #             S0=S0, k_values=vanilla_strikes, T=T1_list, r=r,
+        #             kappa=kappa, v0=v0, theta=theta, sigma=sigma, rho=rho
+        #         ).VanillaImpliedVol()
+        #
+        #         IV_T2 = ImpliedVolCalculatorVanilla(
+        #             S0=S0, k_values=vanilla_strikes, T=T2_list, r=r,
+        #             kappa=kappa, v0=v0, theta=theta, sigma=sigma, rho=rho
+        #         ).VanillaImpliedVol()
+        #
+        #         ax.plot(
+        #             k_values, IV_T1,
+        #             label=f"Vanilla IV T1={T1}",
+        #             color=pastel_colors[i],
+        #             linestyle=linestyles_T1[i],
+        #             linewidth=2
+        #         )
+        #
+        #         ax.plot(
+        #             k_values, IV_T2,
+        #             label=f"Vanilla IV T2={T2}",
+        #             color=pastel_colors[i],
+        #             linestyle=linestyles_T2[i],
+        #             linewidth=2
+        #         )
+        #
+        #     ax.set_xlabel('Moneyness (K / S₀)', fontsize=14)
+        #     ax.set_ylabel('Implied Volatility (IV)', fontsize=14)
+        #     ax.set_title('Vanilla Implied Volatilities at T1 and T2', fontsize=15)
+        #     ax.legend(fontsize=10, loc='upper right', frameon=True, facecolor='white', edgecolor='gray')
+        #
+        #     for spine in ax.spines.values():
+        #         spine.set_visible(True)
+        #         spine.set_color('black')
+        #         spine.set_linewidth(1)
+        #
+        #     plt.tight_layout()
+        #     plt.show()
+        #
+        # plot_vanilla_IV_T1_T2(
+        #     S0=S0,
+        #     r=r,
+        #     kappa=calibrated_params['kappa'],
+        #     v0=calibrated_params['v0'],
+        #     theta=calibrated_params['theta'],
+        #     sigma=calibrated_params['sigma'],
+        #     rho=calibrated_params['rho'],
+        # )
 
-            import numpy as np
-            import matplotlib.pyplot as plt
-
-            k_values = np.linspace(0.6, 1.4, num_strikes).tolist()
-
-            maturity_triplets = [
-                (0.0, 0.5, 1.0),  # bleu
-                (0.0, 0.75, 1.5),  # vert
-                (0.0, 1.0, 2.0),  # orange
-            ]
-
-            pastel_colors = ["#8fbcbb", "#a3be8c", "#d08770"]
-            linestyles_fs = ['-', '-', '-']
-            linestyles_fwd = [':'] * len(maturity_triplets)
-
-            plt.figure(figsize=(12, 6))
-            ax = plt.gca()
-            ax.set_facecolor('white')
-            ax.grid(True, color='gray', linestyle='--', linewidth=0.6, alpha=0.7)
-
-            for i, (T0, T1, T2) in enumerate(maturity_triplets):
-                T2_list = [T2] * len(k_values)
-
-                # ----- Forward Start IV (à partir de HestonFS inversé dans BSFS)
-                IV_FS = ImpliedVolCalculatorFS(
-                    S0=S0, k_values=k_values, T0=T0, T1=T1, T2=T2_list, r=r,
-                    kappa=kappa, v0=v0, theta=theta, sigma=sigma, rho=rho
-                ).FSImpliedVol()
-
-                # ----- Vanilla vols pour T1 et T2
-                vanilla_strikes = [k * S0 for k in k_values]
-                T1_list = [T1] * len(k_values)
-                T2_list = [T2] * len(k_values)
-
-                IV_T1 = ImpliedVolCalculatorVanilla(
-                    S0=S0, k_values=vanilla_strikes, T=T1_list, r=r,
-                    kappa=kappa, v0=v0, theta=theta, sigma=sigma, rho=rho
-                ).VanillaImpliedVol()
-
-                IV_T2 = ImpliedVolCalculatorVanilla(
-                    S0=S0, k_values=vanilla_strikes, T=T2_list, r=r,
-                    kappa=kappa, v0=v0, theta=theta, sigma=sigma, rho=rho
-                ).VanillaImpliedVol()
-
-                # ----- Forward Vanilla vol via formule
-                IV_ForwardVanilla = [
-                    np.sqrt((iv2 ** 2 * T2 - iv1 ** 2 * T1) / (T2 - T1))
-                    for iv1, iv2 in zip(IV_T1, IV_T2)
-                ]
-
-                # ----- Traces
-                label_fs = f"FS: T1={T1}, T2={T2}"
-                label_fwd = f"ForwardVanilla: [{T1} → {T2}]"
-
-                ax.plot(
-                    k_values, IV_FS, label=label_fs,
-                    color=pastel_colors[i], linestyle=linestyles_fs[i], linewidth=2
-                )
-                ax.plot(
-                    k_values, IV_ForwardVanilla, label=label_fwd,
-                    color=pastel_colors[i], linestyle=linestyles_fwd[i], linewidth=2
-                )
-
-            ax.set_xlabel('Moneyness (K / S₀)', fontsize=14)
-            ax.set_ylabel('Implied Volatility (IV)', fontsize=14)
-            ax.set_title('Forward Start vs Forward Vanilla - Implied Volatility Smiles', fontsize=15)
-            ax.legend(fontsize=10, loc='upper right', frameon=True, facecolor='white', edgecolor='gray')
-
-            for spine in ax.spines.values():
-                spine.set_visible(True)
-                spine.set_color('black')
-                spine.set_linewidth(1)
-
-            plt.tight_layout()
-            plt.show()
-
-        plot_combined_IV_smiles(
-            S0=S0,
-            r=r,
-            kappa=calibrated_params['kappa'],
-            v0=calibrated_params['v0'],
-            theta=calibrated_params['theta'],
-            sigma=calibrated_params['sigma'],
-            rho=calibrated_params['rho'],
-        )
+        """FIN DE SMILE"""
 
         # plot_implied_volatility(strike, impliedVolatility, timetomaturity)
         #
@@ -303,17 +388,17 @@ def run(args):
         #  'sigma': 0.19902223348617554, 'rho': -0.8408819437026978}
         # S0=5667.65
         # r=0.043
-        # pnl_analysis(S0=S0,
-        #             k=1.0,
-        #             T0=0.25,
-        #             T1=1.0,
-        #             T2=2.0,
-        #             r=r,
-        #             kappa=calibrated_params["kappa"],
-        #             v0=calibrated_params["v0"],
-        #             theta=calibrated_params["theta"],
-        #             sigma=calibrated_params["sigma"],
-        #              rho=calibrated_params["rho"])
+        pnl_analysis(S0=S0,
+                    k=1.0,
+                    T0=0.0,
+                    T1=0.75,
+                    T2=1.5,
+                    r=r,
+                    kappa=calibrated_params['kappa'],
+                    v0=calibrated_params["v0"],
+                    theta=calibrated_params["theta"],
+                    sigma=calibrated_params["sigma"],
+                     rho=calibrated_params["rho"])
 
 
 
